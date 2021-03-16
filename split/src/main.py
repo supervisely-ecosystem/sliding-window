@@ -1,5 +1,7 @@
 import os
+import random
 import supervisely_lib as sly
+import imgaug.augmenters as iaa
 from supervisely_lib.geometry.sliding_windows_fuzzy import SlidingWindowsFuzzy, SlidingWindowBorderStrategy
 
 import init_ui
@@ -20,25 +22,25 @@ if len(meta.obj_classes) == 0:
 
 images_info = []
 
-CNT_GRID_COLUMNS = 1
-empty_gallery = {
-    "content": {
-        "projectMeta": sly.ProjectMeta().to_json(),
-        "annotations": {},
-        "layout": [[] for i in range(CNT_GRID_COLUMNS)]
-    },
-    "previewOptions": {
-        "enableZoom": True,
-        "resizeOnZoom": True
-    },
-    "options": {
-        "enableZoom": False,
-        "syncViews": False,
-        "showPreview": True,
-        "selectable": False,
-        "opacity": 0.5
-    }
-}
+# CNT_GRID_COLUMNS = 1
+# empty_gallery = {
+#     "content": {
+#         "projectMeta": sly.ProjectMeta().to_json(),
+#         "annotations": {},
+#         "layout": [[] for i in range(CNT_GRID_COLUMNS)]
+#     },
+#     "previewOptions": {
+#         "enableZoom": True,
+#         "resizeOnZoom": True
+#     },
+#     "options": {
+#         "enableZoom": False,
+#         "syncViews": False,
+#         "showPreview": True,
+#         "selectable": False,
+#         "opacity": 0.5
+#     }
+# }
 
 
 def cache_images_info(api: sly.Api, project_id):
@@ -59,7 +61,22 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     slider = SlidingWindowsFuzzy([state["windowHeight"], state["windowWidth"]],
                                  [state["overlapY"], state["overlapX"]],
                                  state["borderStrategy"])
+    image_info = random.choice(images_info)
+    img = api.image.download_np(image_info.id)
 
+    h, w = img.shape[:2]
+    max_right = w - 1
+    max_bottom = h - 1
+    rectangles = []
+    for window in slider.get(img.shape[:2]):
+        rectangles.append(window)
+        max_right = max(max_right, window.right)
+        max_bottom = max(max_bottom, window.bottom)
+        print(window)
+
+    aug = iaa.PadToFixedSize(width=max_right, height=max_bottom, position='right-bottom')
+    print(max_right)
+    print(max_bottom)
 
 
 def main():
