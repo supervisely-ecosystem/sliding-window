@@ -1,0 +1,24 @@
+# spacial augmentations are taken from ImgAug, color - from Albumentations
+# comment augmentation to disable it
+
+objects:
+  count: [1, 5] # number of objects (range) per image for every class
+  augs:
+    color:
+      RandomBrightnessContrast: true
+      CLAHE: true
+      Blur: true
+    spacial:
+      Fliplr: 0.5 # probability
+      Flipud: 0.5 # probability
+      Rotate: (-90, 90)
+      #ElasticTransformation:
+      #  alpha: (0, 40)
+      #  sigma: (4, 8)
+      Resize: (0.8, 1.5) # Resize to something between 80 and 150% of its original size
+
+# Background image augmentations (coming soon)
+# background: false
+
+# Result image augmentations  (coming soon)
+# result: false
