@@ -15,7 +15,7 @@ def init_settings(state):
     state["overlapY"] = 32
     state["overlapX"] = 32
     state["borderStrategy"] = "shift_window"  # "add_padding"
-    state["fps"] = 3
+    state["fps"] = 4
 
 
 def init_res_project(data, state, project_info):

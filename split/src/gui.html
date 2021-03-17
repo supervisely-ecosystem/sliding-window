@@ -24,8 +24,6 @@
                   style="width: 40%; min-width: 430px;">
             <div>Window height</div>
             <el-input-number class="mt5" v-model="state.windowHeight" :min="1" :max="10000"></el-input-number>
-            <div>Visualization FPS</div>
-            <el-input-number class="mt5" v-model="state.fps" :min="1" :max="20"></el-input-number>
             <div class="mt15">Window width</div>
             <el-input-number class="mt5" v-model="state.windowWidth" :min="1" :max="10000"></el-input-number>
             <div class="mt15">Vertical overlap (y axis)</div>
@@ -56,12 +54,8 @@
                     </el-radio>
                 </el-radio-group>
             </sly-field>
-
-            <!--            <el-select class="mt5" v-model="state.borderStrategy" placeholder="Select">-->
-            <!--                <el-option key="add_padding" label="add padding" value="add_padding"></el-option>-->
-            <!--                <el-option key="shift_window" label="shift window" value="shift_window"></el-option>-->
-            <!--                <el-option key="change_size" label="change size" value="change_size"></el-option>-->
-            <!--            </el-select>-->
+            <div>Visualization FPS</div>
+            <el-input-number class="mt5" v-model="state.fps" :min="1" :max="20"></el-input-number>
 
         </sly-card>
         <sly-card title="Random Preview"
