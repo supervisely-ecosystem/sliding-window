@@ -189,10 +189,10 @@ def main():
     init_ui.init_settings(state)
     init_ui.init_res_project(data, state, project_info)
     data["progress"] = 0
-
     data["videoUrl"] = None
-    cache_images_info(app.public_api, project_id)
+    state["previewLoading"] = False
 
+    cache_images_info(app.public_api, project_id)
     app.run(data=data, state=state)
 
 
