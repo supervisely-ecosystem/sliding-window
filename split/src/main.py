@@ -22,6 +22,8 @@ if len(meta.obj_classes) == 0:
 
 images_info = []
 
+MAX_VIDEO_HEIGHT = 600  # in pixels
+
 # CNT_GRID_COLUMNS = 1
 # empty_gallery = {
 #     "content": {
