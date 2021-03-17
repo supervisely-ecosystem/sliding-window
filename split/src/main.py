@@ -115,6 +115,15 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     api.task.set_fields(task_id, fields)
 
 
+def refresh_progress_split(api: sly.Api, task_id, progress: sly.Progress):
+    fields = [
+        {"field": "data.progress", "payload": int(progress.current * 100 / progress.total)},
+        {"field": "data.progressCurrent", "payload": progress.current},
+        {"field": "data.progressTotal", "payload": progress.total},
+    ]
+    api.task.set_fields(task_id, fields)
+
+
 @app.callback("split")
 @sly.timeit
 def split(api: sly.Api, task_id, context, state, app_logger):
@@ -180,7 +189,7 @@ def split(api: sly.Api, task_id, context, state, app_logger):
 
         progress.iter_done_report()
         if progress.need_report():
-            api.task.set_field(task_id, "data.progress", int(progress.current * 100 / progress.total))
+            refresh_progress_split(api, task_id, progress)
 
     res_project = api.project.get_info_by_id(dst_project.id)
     fields = [
@@ -202,8 +211,12 @@ def main():
     init_ui.init_input_project(app.public_api, data, project_info)
     init_ui.init_settings(state)
     init_ui.init_res_project(data, state, project_info)
-    data["progress"] = 0
+
     data["videoUrl"] = None
+
+    data["progress"] = 0
+    data["progressCurrent"] = 0
+    data["progressTotal"] = 0
 
     state["previewLoading"] = False
     data["progressPreview"] = 0

@@ -102,7 +102,7 @@
         <div style="margin-top: 30px;">
             <sly-field class="mt15"
                        v-if="data.resProjectId && !data.started"
-                       title="Project created">
+                       title="New project has been created">
                 <sly-field title="" description="Project">
                     <a slot="title" target="_blank"
                        :href="`/projects/${data.resProjectId}/datasets`">{{data.resProjectName}}</a>
@@ -110,6 +110,11 @@
                 </sly-field>
             </sly-field>
         </div>
-        <el-progress class="mt10" v-if="data.started === true" :percentage="data.progress"></el-progress>
+        <div class="fflex mt10" v-if="data.started === true">
+            <div class="mr10" style="width: 120px;">Split images:</div>
+            <el-progress class="mt10" v-if="data.started === true" :percentage="data.progress" style="flex: 1"></el-progress>
+            <div class="ml10" style="flex: none;">[{{data.progressCurrent}} / {{data.progressTotal}}]
+            </div>
+        </div>
     </sly-card>
 </div>
