@@ -21,12 +21,51 @@
             <el-input-number class="mt5" v-model="state.overlapY" :min="1" :max="10000"></el-input-number>
             <div class="mt15">Horizontal overlap (x axis)</div>
             <el-input-number class="mt5" v-model="state.overlapX" :min="1" :max="10000"></el-input-number>
-            <div class="mt15">Border strategy</div>
-            <el-select class="mt5" v-model="state.borderStrategy" placeholder="Select">
-                <el-option key="add_padding" label="add padding" value="add_padding"></el-option>
-                <el-option key="shift_window" label="shift window" value="shift_window"></el-option>
-                <el-option key="change_size" label="change size" value="change_size"></el-option>
-            </el-select>
+            <sly-field style="margin-top: 15px;" title="Border strategy">
+                <el-radio-group class="fflex"
+                                v-model="state.borderStrategy"
+                                style="flex-direction: column; align-items: flex-start">
+                    <el-radio label="shift_window">
+                        <div class="fflex"
+                             style="flex-direction: column; align-items: flex-start; display: inline-flex;">
+                            <span><b>shift window</b></span>
+                            <small class="mt5 mb10"
+                                   style="white-space: normal; width: calc(100% - 30px); color: #5a6772; font-size: 13px;">
+                                description1 description1 description1 description1 description1 description1
+                                description1 description1description1
+                            </small>
+                        </div>
+                    </el-radio>
+                    <el-radio style="margin-left: 0" label="add_padding">
+                        <div class="fflex"
+                             style="flex-direction: column; align-items: flex-start; display: inline-flex;">
+                            <span><b>add padding</b></span>
+                            <small class="mt5 mb10"
+                                   style="white-space: normal; width: calc(100% - 30px); color: #5a6772; font-size: 13px;">
+                                description1 description1 description1 description1 description1 description1
+                                description1 description1description1
+                            </small>
+                        </div>
+                    </el-radio>
+                    <el-radio style="margin-left: 0" label="change_size">
+                        <div class="fflex"
+                             style="flex-direction: column; align-items: flex-start; display: inline-flex;">
+                            <span><b>change size</b></span>
+                            <small class="mt5 mb10"
+                                   style="white-space: normal; width: calc(100% - 30px); color: #5a6772; font-size: 13px;">
+                                description1 description1 description1 description1 description1 description1
+                                description1 description1description1
+                            </small>
+                        </div>
+                    </el-radio>
+                </el-radio-group>
+            </sly-field>
+
+            <!--            <el-select class="mt5" v-model="state.borderStrategy" placeholder="Select">-->
+            <!--                <el-option key="add_padding" label="add padding" value="add_padding"></el-option>-->
+            <!--                <el-option key="shift_window" label="shift window" value="shift_window"></el-option>-->
+            <!--                <el-option key="change_size" label="change size" value="change_size"></el-option>-->
+            <!--            </el-select>-->
 
         </sly-card>
         <sly-card title="Random Preview"
@@ -42,7 +81,7 @@
                 </el-button>
             </div>
             <video v-if="data.videoUrl" controls style="max-height: 350px; width: auto;">
-<!--                <source src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">-->
+                <!--                <source src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">-->
                 <source :src="data.videoUrl" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
