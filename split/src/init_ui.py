@@ -11,8 +11,8 @@ def init_input_project(api: sly.Api, data: dict, project_info):
 
 def init_settings(state):
     #@TODO: for debug
-    state["windowHeight"] = 600 # 256
-    state["windowWidth"] = 1000 # 256
+    state["windowHeight"] = 256
+    state["windowWidth"] = 256
     state["overlapY"] = 32
     state["overlapX"] = 32
     state["borderStrategy"] = "add_padding" #"shift_window"
