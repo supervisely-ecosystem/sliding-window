@@ -1,5 +1,6 @@
 import os
 import random
+import cv2
 import supervisely_lib as sly
 import imgaug.augmenters as iaa
 from supervisely_lib.geometry.sliding_windows_fuzzy import SlidingWindowsFuzzy, SlidingWindowBorderStrategy
@@ -82,7 +83,21 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
         sly.logger.debug("Padding", extra={"h": h, "w": w, "max_right": max_right, "max_bottom": max_bottom})
         aug = iaa.PadToFixedSize(width=max_right, height=max_bottom, position='right-bottom')
         img = aug(image=img)
-        sly.image.write(os.path.join(app.data_dir, "padded.jpg"), img)
+        #sly.image.write(os.path.join(app.data_dir, "padded.jpg"), img)
+
+    height, width, channels = img.shape
+    video = cv2.VideoWriter(os.path.join(app.data_dir, "preview.mp4"),
+                            cv2.VideoWriter_fourcc(*'mp4v'),
+                            4, (width, height))
+    for rect in rectangles:
+        frame = img.copy()
+        rect: sly.Rectangle
+        rect.draw(frame, [255, 0, 0], thickness=3)
+        #img_bgr = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        video.write(img)
+    video.release()
+
+
 
 
 def main():
