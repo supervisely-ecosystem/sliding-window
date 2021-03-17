@@ -22,13 +22,13 @@
                   title="Settings"
                   subtitle="Configure parameters of sliding windows, all values are in pixels"
                   style="width: 40%; min-width: 430px;">
-            <div>Window height</div>
+            <div><b>Window height</b></div>
             <el-input-number class="mt5" v-model="state.windowHeight" :min="1" :max="10000"></el-input-number>
-            <div class="mt15">Window width</div>
+            <div class="mt15"><b>Window width</b></div>
             <el-input-number class="mt5" v-model="state.windowWidth" :min="1" :max="10000"></el-input-number>
-            <div class="mt15">Vertical overlap (y axis)</div>
+            <div class="mt15"><b>Vertical overlap (y axis)</b></div>
             <el-input-number class="mt5" v-model="state.overlapY" :min="1" :max="10000"></el-input-number>
-            <div class="mt15">Horizontal overlap (x axis)</div>
+            <div class="mt15"><b>Horizontal overlap (x axis)</b></div>
             <el-input-number class="mt5" v-model="state.overlapX" :min="1" :max="10000"></el-input-number>
             <sly-field style="margin-top: 15px;" title="Border strategy">
                 <el-radio-group class="fflex"
@@ -54,7 +54,7 @@
                     </el-radio>
                 </el-radio-group>
             </sly-field>
-            <div>Visualization FPS</div>
+            <div><b>Visualization FPS</b></div>
             <el-input-number class="mt5" v-model="state.fps" :min="1" :max="20"></el-input-number>
 
         </sly-card>
@@ -76,7 +76,15 @@
                 <source :src="data.videoUrl" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
-            <div v-if="!data.videoUrl">Press preview to watch demo video</div>
+            <div v-if="!data.videoUrl && state.previewLoading === false">Press preview to watch demo video</div>
+            <div v-if=""></div>
+
+            <div class="fflex mt10" v-if="state.previewLoading === true">
+                <div class="mr10" style="width: 120px;">Rendering video:</div>
+                <el-progress :percentage="data.progressPreview" style="flex: 1"></el-progress>
+                <div class="ml10" style="flex: none;">[{{data.progressPreviewCurrent}} / {{data.progressPreviewTotal}}]
+                </div>
+            </div>
         </sly-card>
     </div>
 

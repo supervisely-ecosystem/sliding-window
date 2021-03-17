@@ -32,6 +32,15 @@ def cache_images_info(api: sly.Api, project_id):
         images_info.extend(api.image.get_list(dataset_info.id))
 
 
+def refresh_progress_preview(api: sly.Api, task_id, progress: sly.Progress):
+    fields = [
+        {"field": "data.progressPreview", "payload": int(progress.current * 100 / progress.total)},
+        {"field": "data.progressPreviewCurrent", "payload": progress.current},
+        {"field": "data.progressPreviewTotal", "payload": progress.total},
+    ]
+    api.task.set_fields(task_id, fields)
+
+
 @app.callback("preview")
 @sly.timeit
 def preview(api: sly.Api, task_id, context, state, app_logger):
@@ -78,6 +87,7 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     video = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'VP90'), state["fps"], (width, height))
     #video = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'avc1'), 3, (width, height))
     #video = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'mp4v'), 3, (width, height))
+    progress = sly.Progress("Rendering video", len(rectangles))
     for i, rect in enumerate(rectangles):
         frame = img.copy()
         rect: sly.Rectangle
@@ -87,6 +97,10 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
         #sly.image.write(os.path.join(app.data_dir, f"{i:05d}.jpg"), frame)
         frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         video.write(frame_bgr)
+
+        progress.iter_done_report()
+        if progress.need_report():
+            refresh_progress_preview(api, task_id, progress)
     video.release()
 
     remote_video_path = os.path.join(f"/sliding-window/{task_id}", "preview.mp4")
@@ -190,7 +204,11 @@ def main():
     init_ui.init_res_project(data, state, project_info)
     data["progress"] = 0
     data["videoUrl"] = None
+
     state["previewLoading"] = False
+    data["progressPreview"] = 0
+    data["progressPreviewCurrent"] = 0
+    data["progressPreviewTotal"] = 0
 
     cache_images_info(app.public_api, project_id)
     app.run(data=data, state=state)
