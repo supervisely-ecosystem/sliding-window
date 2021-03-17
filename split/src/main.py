@@ -37,6 +37,7 @@ def cache_images_info(api: sly.Api, project_id):
 def preview(api: sly.Api, task_id, context, state, app_logger):
     fields = [
         {"field": "data.videoUrl", "payload": None},
+        {"field": "state.previewLoading", "payload": True},
     ]
     api.task.set_fields(task_id, fields)
 
