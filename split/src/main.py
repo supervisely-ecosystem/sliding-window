@@ -52,12 +52,6 @@ def cache_images_info(api: sly.Api, project_id):
         images_info.extend(api.image.get_list(dataset_info.id))
 
 
-@app.callback("split")
-@sly.timeit
-def generate(api: sly.Api, task_id, context, state, app_logger):
-    pass
-
-
 @app.callback("preview")
 @sly.timeit
 def preview(api: sly.Api, task_id, context, state, app_logger):
@@ -112,7 +106,6 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     video.release()
 
     remote_video_path = os.path.join(f"/sliding-window/{task_id}", "preview.mp4")
-    file_info = None
     if api.file.exists(team_id, remote_video_path):
         api.file.remove(team_id, remote_video_path)
     file_info = api.file.upload(team_id, video_path, remote_video_path)
@@ -125,12 +118,19 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     api.task.set_fields(task_id, fields)
 
 
+@app.callback("split")
+@sly.timeit
+def generate(api: sly.Api, task_id, context, state, app_logger):
+    pass
+
+
 def main():
     data = {}
     state = {}
 
     init_ui.init_input_project(app.public_api, data, project_info)
     init_ui.init_settings(state)
+
     data["videoUrl"] = None
     cache_images_info(app.public_api, project_id)
 

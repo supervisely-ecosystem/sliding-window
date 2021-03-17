@@ -50,34 +50,6 @@
         </sly-card>
     </div>
 
-    <!--    <sly-card class="mt15"-->
-    <!--              title="Random preview"-->
-    <!--              subtitle="Preview synthetic image and labels, overlapping is handled automatically, fully covered objects will be skipped">-->
-    <!--        <div slot="header">-->
-    <!--            <el-button-->
-    <!--                    type="primary"-->
-    <!--                    @click="state.previewLoading = true; command('preview')"-->
-    <!--                    :disabled="state.selectedClasses.filter(Boolean).length === 0 ||-->
-    <!--                               !state.bgProjectId ||-->
-    <!--                               (state.allDatasets === false && state.bgDatasets.length === 0)"-->
-    <!--                    :loading="state.previewLoading"-->
-    <!--            >-->
-    <!--                <i class="zmdi zmdi-slideshow" style="margin-right: 5px"></i> Preview-->
-    <!--            </el-button>-->
-    <!--        </div>-->
-    <!--        <div class="fflex" v-show="state.previewLoading">-->
-    <!--            <el-progress :percentage="data.progressPercentPreview" style="flex: 1;"></el-progress>-->
-    <!--            <div>{{data.progressCurrentPreview}} / {{data.progressTotalPreview}}</div>-->
-    <!--        </div>-->
-    <!--        <sly-grid-gallery-->
-    <!--                v-show="Object.keys(data.gallery.content.annotations).length > 0 && !state.previewLoading"-->
-    <!--                :content="data.gallery.content"-->
-    <!--                :options="data.gallery.options"/>-->
-    <!--        <div v-show="Object.keys(data.gallery.content.annotations).length === 0 && !state.previewLoading">-->
-    <!--            Gallery is empty, press Preview button to visualize examples-->
-    <!--        </div>-->
-    <!--    </sly-card>-->
-
     <sly-card class="mt15"
               title="Output Project"
               subtitle="Define result project name, press Run and monitor progress">
@@ -88,21 +60,22 @@
                 Split
             </el-button>
         </sly-field>
+
+        <div style="margin-top: 30px;">
+            <sly-field class="mt15"
+                       v-if="data.resProjectId && !data.started"
+                       title="Project created">
+                <sly-field title="" description="Project">
+                    <a slot="title" target="_blank"
+                       :href="`/projects/${data.resProjectId}/datasets`">{{data.resProjectName}}</a>
+                    <sly-icon slot="icon" :options="{ imageUrl: `${data.resProjectPreviewUrl}` }"/>
+                </sly-field>
+            </sly-field>
+        </div>
         <!--            <div class="fflex mt10" v-if="data.started === true">-->
         <!--                <div class="mr10" style="width: 120px;">Objects on image:</div>-->
         <!--                <el-progress :percentage="data.progressPercent" style="flex: 1"></el-progress>-->
         <!--                <div class="ml10" style="flex: none;">[{{data.progressCurrent}} / {{data.progressTotal}}]</div>-->
         <!--            </div>-->
-        <!--        <div style="margin-top: 30px;">-->
-        <!--            <sly-field class="mt15"-->
-        <!--                       v-if="data.resProjectId && !data.started"-->
-        <!--                       title="Project created">-->
-        <!--                <sly-field title="" description="Project">-->
-        <!--                    <a slot="title" target="_blank"-->
-        <!--                       :href="`/projects/${data.resProjectId}/datasets`">{{data.resProjectName}}</a>-->
-        <!--                    <sly-icon slot="icon" :options="{ imageUrl: `${data.resProjectPreviewUrl}` }"/>-->
-        <!--                </sly-field>-->
-        <!--            </sly-field>-->
-        <!--        </div>-->
     </sly-card>
 </div>
