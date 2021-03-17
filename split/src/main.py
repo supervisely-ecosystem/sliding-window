@@ -64,6 +64,9 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     image_info = random.choice(images_info)
     img = api.image.download_np(image_info.id)
 
+    ann_json = api.annotation.download(image_info.id).annotation
+    ann = sly.Annotation.from_json(ann_json, meta)
+
     h, w = img.shape[:2]
     max_right = w - 1
     max_bottom = h - 1
@@ -72,11 +75,12 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
         rectangles.append(window)
         max_right = max(max_right, window.right)
         max_bottom = max(max_bottom, window.bottom)
-        print(window)
 
-    aug = iaa.PadToFixedSize(width=max_right, height=max_bottom, position='right-bottom')
-    print(max_right)
-    print(max_bottom)
+    if max_right > w or max_bottom > h:
+        sly.logger.debug("Padding", extra={"h": h, "w": w, "max_right": max_right, "max_bottom": max_bottom})
+        aug = iaa.PadToFixedSize(width=max_right, height=max_bottom, position='right-bottom')
+        img = aug(image=img)
+        sly.image.write(os.path.join(app.data_dir, "padded.jpg"), img)
 
 
 def main():
