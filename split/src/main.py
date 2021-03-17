@@ -72,6 +72,7 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     height, width, channels = frame_img.shape
 
     video_path = os.path.join(app.data_dir, "preview.mp4")
+    sly.fs.ensure_base_path(video_path)
     sly.fs.silent_remove(video_path)
     video = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'avc1'), 3, (width, height))
     for i, rect in enumerate(rectangles):
