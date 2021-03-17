@@ -106,8 +106,6 @@
                 </sly-field>
             </sly-field>
         </div>
-        <div class="fflex mt10" v-if="data.started === true">
-            <el-progress :percentage="data.progress"></el-progress>
-        </div>
+        <el-progress class="mt10" v-if="data.started === true" :percentage="data.progress"></el-progress>
     </sly-card>
 </div>
