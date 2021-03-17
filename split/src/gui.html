@@ -41,10 +41,12 @@
                     <i class="zmdi zmdi-slideshow" style="margin-right: 5px"></i> Preview
                 </el-button>
             </div>
-            <video controls style="width: 100%; max-height: 610px;">
-                <source src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+            <video v-if="data.videoUrl" controls style="width: 100%; max-height: 610px;">
+<!--                <source src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">-->
+                <source :src="data.videoUrl" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
+            <div v-if="!data.videoUrl">Press preview to see video demo</div>
         </sly-card>
     </div>
 
