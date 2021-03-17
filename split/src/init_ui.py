@@ -19,7 +19,7 @@ def init_settings(state):
 
 def init_res_project(data, state, project_info):
     data["resProjectId"] = None
-    state["resProjectName"] = f"{project_info.name}-split"
+    state["resProjectName"] = f"{project_info.name}-sw-split"
     data["resProjectName"] = None
     data["resProjectPreviewUrl"] = None
     data["started"] = False

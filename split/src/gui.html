@@ -105,10 +105,8 @@
                 </sly-field>
             </sly-field>
         </div>
-        <!--            <div class="fflex mt10" v-if="data.started === true">-->
-        <!--                <div class="mr10" style="width: 120px;">Objects on image:</div>-->
-        <!--                <el-progress :percentage="data.progressPercent" style="flex: 1"></el-progress>-->
-        <!--                <div class="ml10" style="flex: none;">[{{data.progressCurrent}} / {{data.progressTotal}}]</div>-->
-        <!--            </div>-->
+        <div class="fflex mt10" v-if="data.started === true">
+            <el-progress :percentage="data.progress"></el-progress>
+        </div>
     </sly-card>
 </div>

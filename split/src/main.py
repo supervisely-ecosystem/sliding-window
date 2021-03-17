@@ -100,7 +100,36 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
 @app.callback("split")
 @sly.timeit
 def split(api: sly.Api, task_id, context, state, app_logger):
-    pass
+    slider = SlidingWindowsFuzzy([state["windowHeight"], state["windowWidth"]],
+                                 [state["overlapY"], state["overlapX"]],
+                                 state["borderStrategy"])
+    for image_info in images_info:
+        img = api.image.download_np(image_info.id)
+
+        ann_json = api.annotation.download(image_info.id).annotation
+        ann = sly.Annotation.from_json(ann, meta)
+
+        crop_names = []
+        crop_images = []
+        crop_anns = []
+
+        for window_index, window in enumerate(slider.get(img.shape[:2])):
+            crop_name = "{}___{:04d}_{}_{}{}".format(sly.fs.get_file_name(image_info.name),
+                                                     window_index,
+                                                     window.top,
+                                                     window.left,
+                                                     sly.fs.get_file_ext(image_info.name))
+            crop_names.append(crop_name)
+
+            crop_ann = ann.relative_crop(window)
+            crop_anns.append(crop_ann)
+
+            if state["borderStrategy"] == str(SlidingWindowBorderStrategy.ADD_PADDING):
+                crop_image = sly.image.crop_with_padding(img, window)
+            else:
+                crop_image = sly.image.crop(img, window)
+            crop_images.append(crop_image)
+
 
 
 def main():
@@ -109,6 +138,8 @@ def main():
 
     init_ui.init_input_project(app.public_api, data, project_info)
     init_ui.init_settings(state)
+    init_ui.init_res_project(data, state, project_info)
+    data["progress"] = 0
 
     data["videoUrl"] = None
     cache_images_info(app.public_api, project_id)
