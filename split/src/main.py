@@ -86,15 +86,16 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
         #sly.image.write(os.path.join(app.data_dir, "padded.jpg"), img)
 
     height, width, channels = img.shape
-    video = cv2.VideoWriter(os.path.join(app.data_dir, "preview.mp4"),
-                            cv2.VideoWriter_fourcc(*'mp4v'),
-                            4, (width, height))
-    for rect in rectangles:
+    video_path = os.path.join(app.data_dir, "preview.mp4")
+    sly.fs.silent_remove(video_path)
+    video = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'mp4v'), 1, (width, height))
+    for i, rect in enumerate(rectangles):
         frame = img.copy()
         rect: sly.Rectangle
-        rect.draw(frame, [255, 0, 0], thickness=3)
-        #img_bgr = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        video.write(img)
+        rect.draw_contour(frame, [255, 0, 0], thickness=3)
+        #sly.image.write(os.path.join(app.data_dir, f"{i:05d}.jpg"), frame)
+        frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        video.write(frame_bgr)
     video.release()
 
 
