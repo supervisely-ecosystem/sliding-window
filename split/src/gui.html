@@ -70,6 +70,7 @@
                         type="primary"
                         @click="state.previewLoading = true; command('preview')"
                         :loading="state.previewLoading"
+                        :disabled="data.resProjectId"
                 >
                     <i class="zmdi zmdi-slideshow" style="margin-right: 5px"></i> Preview
                 </el-button>
@@ -88,7 +89,7 @@
               subtitle="Define result project name, press Run and monitor progress">
         <sly-field title="Result project name">
             <el-input v-model="state.resProjectName"></el-input>
-            <el-button class="mt10" type="primary" :loading="data.started"
+            <el-button class="mt10" type="primary" :loading="data.started" :disabled="data.resProjectId"
                        @click="data.started = true; command('split')">
                 Split
             </el-button>
