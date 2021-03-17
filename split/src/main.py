@@ -23,7 +23,7 @@ if len(meta.obj_classes) == 0:
 
 images_info = []
 
-MAX_VIDEO_HEIGHT = 600  # in pixels
+MAX_VIDEO_HEIGHT = 800  # in pixels
 
 # CNT_GRID_COLUMNS = 1
 # empty_gallery = {
@@ -61,6 +61,11 @@ def generate(api: sly.Api, task_id, context, state, app_logger):
 @app.callback("preview")
 @sly.timeit
 def preview(api: sly.Api, task_id, context, state, app_logger):
+    fields = [
+        {"field": "data.videoUrl", "payload": None},
+    ]
+    api.task.set_fields(task_id, fields)
+
     slider = SlidingWindowsFuzzy([state["windowHeight"], state["windowWidth"]],
                                  [state["overlapY"], state["overlapX"]],
                                  state["borderStrategy"])
@@ -85,14 +90,22 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
         img = aug(image=img)
         #sly.image.write(os.path.join(app.data_dir, "padded.jpg"), img)
 
-    height, width, channels = img.shape
+    frame_img = img.copy()
+    resize_aug = None
+    if frame_img.shape[0] > MAX_VIDEO_HEIGHT:
+        resize_aug = iaa.Resize({"height": MAX_VIDEO_HEIGHT, "width": "keep-aspect-ratio"})
+        frame_img = resize_aug(image=frame_img.copy())
+    height, width, channels = frame_img.shape
+
     video_path = os.path.join(app.data_dir, "preview.mp4")
     sly.fs.silent_remove(video_path)
-    video = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'mp4v'), 1, (width, height))
+    video = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'avc1'), 2, (width, height))
     for i, rect in enumerate(rectangles):
         frame = img.copy()
         rect: sly.Rectangle
-        rect.draw_contour(frame, [255, 0, 0], thickness=3)
+        rect.draw_contour(frame, [255, 0, 0], thickness=5)
+        if resize_aug is not None:
+            frame = resize_aug(image=frame)
         #sly.image.write(os.path.join(app.data_dir, f"{i:05d}.jpg"), frame)
         frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         video.write(frame_bgr)
@@ -104,13 +117,12 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
         api.file.remove(team_id, remote_video_path)
     file_info = api.file.upload(team_id, video_path, remote_video_path)
 
-    print(file_info.full_storage_url)
+    #print(file_info.full_storage_url)
     fields = [
         {"field": "state.previewLoading", "payload": False},
         {"field": "data.videoUrl", "payload": file_info.full_storage_url},
     ]
     api.task.set_fields(task_id, fields)
-
 
 
 def main():
@@ -123,6 +135,7 @@ def main():
     cache_images_info(app.public_api, project_id)
 
     app.run(data=data, state=state)
+
 
 # https://github.com/supervisely/supervisely/tree/master/plugins/python/src/examples/001_image_splitter
 if __name__ == "__main__":

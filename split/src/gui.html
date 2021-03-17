@@ -14,13 +14,13 @@
                   subtitle="Configure parameters of sliding windows, all values are in pixels"
                   style="width: 40%">
             <div>Window height</div>
-            <el-input-number class="mt5" v-model="state.windowHeight" :min="5" :max="10000"></el-input-number>
+            <el-input-number class="mt5" v-model="state.windowHeight" :min="1" :max="10000"></el-input-number>
             <div class="mt15">Window width</div>
-            <el-input-number class="mt5" v-model="state.windowWidth" :min="5" :max="10000"></el-input-number>
+            <el-input-number class="mt5" v-model="state.windowWidth" :min="1" :max="10000"></el-input-number>
             <div class="mt15">Vertical overlap</div>
-            <el-input-number class="mt5" v-model="state.overlapY" :min="5" :max="10000"></el-input-number>
+            <el-input-number class="mt5" v-model="state.overlapY" :min="1" :max="10000"></el-input-number>
             <div class="mt15">Horizontal overlap</div>
-            <el-input-number class="mt5" v-model="state.overlapX" :min="5" :max="10000"></el-input-number>
+            <el-input-number class="mt5" v-model="state.overlapX" :min="1" :max="10000"></el-input-number>
             <div class="mt15">Border strategy</div>
             <el-select class="mt5" v-model="state.borderStrategy" placeholder="Select">
                 <el-option key="add_padding" label="add padding" value="add_padding"></el-option>
@@ -41,7 +41,7 @@
                     <i class="zmdi zmdi-slideshow" style="margin-right: 5px"></i> Preview
                 </el-button>
             </div>
-            <video v-if="data.videoUrl" controls style="width: 100%; max-height: 610px;">
+            <video v-if="data.videoUrl" controls style="max-height: 350px; width: auto;">
 <!--                <source src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">-->
                 <source :src="data.videoUrl" type="video/mp4">
                 Your browser does not support the video tag.
