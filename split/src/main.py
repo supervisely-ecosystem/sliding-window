@@ -25,26 +25,6 @@ images_info = []
 
 MAX_VIDEO_HEIGHT = 800  # in pixels
 
-# CNT_GRID_COLUMNS = 1
-# empty_gallery = {
-#     "content": {
-#         "projectMeta": sly.ProjectMeta().to_json(),
-#         "annotations": {},
-#         "layout": [[] for i in range(CNT_GRID_COLUMNS)]
-#     },
-#     "previewOptions": {
-#         "enableZoom": True,
-#         "resizeOnZoom": True
-#     },
-#     "options": {
-#         "enableZoom": False,
-#         "syncViews": False,
-#         "showPreview": True,
-#         "selectable": False,
-#         "opacity": 0.5
-#     }
-# }
-
 
 def cache_images_info(api: sly.Api, project_id):
     global images_info
@@ -93,7 +73,7 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
 
     video_path = os.path.join(app.data_dir, "preview.mp4")
     sly.fs.silent_remove(video_path)
-    video = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'avc1'), 2, (width, height))
+    video = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'avc1'), 3, (width, height))
     for i, rect in enumerate(rectangles):
         frame = img.copy()
         rect: sly.Rectangle
@@ -110,7 +90,6 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
         api.file.remove(team_id, remote_video_path)
     file_info = api.file.upload(team_id, video_path, remote_video_path)
 
-    #print(file_info.full_storage_url)
     fields = [
         {"field": "state.previewLoading", "payload": False},
         {"field": "data.videoUrl", "payload": file_info.full_storage_url},
@@ -120,7 +99,7 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
 
 @app.callback("split")
 @sly.timeit
-def generate(api: sly.Api, task_id, context, state, app_logger):
+def split(api: sly.Api, task_id, context, state, app_logger):
     pass
 
 

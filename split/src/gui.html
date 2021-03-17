@@ -21,7 +21,7 @@
         <sly-card class="mr15"
                   title="Settings"
                   subtitle="Configure parameters of sliding windows, all values are in pixels"
-                  style="width: 40%">
+                  style="width: 40%; min-width: 430px;">
             <div>Window height</div>
             <el-input-number class="mt5" v-model="state.windowHeight" :min="1" :max="10000"></el-input-number>
             <div class="mt15">Window width</div>
@@ -37,22 +37,19 @@
                     <el-radio label="shift_window">
                         <sly-field class="field-radio"
                                    title="Shift window"
-                                   description="description1 description1 description1 description1 description1 description1
-                                                description1 description1description1">
+                                   description="Window is shifted to fit into image">
                         </sly-field>
                     </el-radio>
                     <el-radio style="margin-left: 0" label="add_padding">
                         <sly-field class="field-radio"
                                    title="Add padding"
-                                   description="description1 description1 description1 description1 description1 description1
-                                                description1 description1description1">
+                                   description="Pad image at the bottom right">
                         </sly-field>
                     </el-radio>
                     <el-radio style="margin-left: 0" label="change_size">
                         <sly-field class="field-radio"
                                    title="Change size"
-                                   description="description1 description1 description1 description1 description1 description1
-                                                description1 description1description1">
+                                   description="Resize window without keeping aspect ratio">
                         </sly-field>
                     </el-radio>
                 </el-radio-group>
@@ -77,7 +74,7 @@
                     <i class="zmdi zmdi-slideshow" style="margin-right: 5px"></i> Preview
                 </el-button>
             </div>
-            <video v-if="data.videoUrl" controls style="max-height: 350px; width: auto;">
+            <video v-if="data.videoUrl" controls style="max-height: 450px; width: auto;">
                 <!--                <source src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">-->
                 <source :src="data.videoUrl" type="video/mp4">
                 Your browser does not support the video tag.
