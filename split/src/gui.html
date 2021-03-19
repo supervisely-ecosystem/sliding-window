@@ -72,7 +72,7 @@
                         type="primary"
                         @click="state.previewLoading = true; command('preview')"
                         :loading="state.previewLoading"
-                        :disabled="data.resProjectId"
+                        :disabled="data.resProjectId || data.started"
                 >
                     <i class="zmdi zmdi-slideshow" style="margin-right: 5px"></i> Preview
                 </el-button>
@@ -86,7 +86,7 @@
             <div v-if=""></div>
 
             <div class="fflex mt10" v-if="state.previewLoading === true" style="align-items: baseline;">
-                <div class="mr10" style="width: 120px;">Rendering video:</div>
+                <div class="mr10" style="width: 120px;">{{data.progressPreviewMessage}}:</div>
                 <el-progress :percentage="data.progressPreview" style="flex: 1"></el-progress>
                 <div class="ml10" style="flex: none;">[{{data.progressPreviewCurrent}} / {{data.progressPreviewTotal}}]</div>
             </div>

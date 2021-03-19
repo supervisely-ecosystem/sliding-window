@@ -36,6 +36,7 @@ def cache_images_info(api: sly.Api, project_id):
 def refresh_progress_preview(api: sly.Api, task_id, progress: sly.Progress):
     fields = [
         {"field": "data.progressPreview", "payload": int(progress.current * 100 / progress.total)},
+        {"field": "data.progressPreviewMessage", "payload": progress.message},
         {"field": "data.progressPreviewCurrent", "payload": progress.current},
         {"field": "data.progressPreviewTotal", "payload": progress.total},
     ]
@@ -89,10 +90,9 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     sly.fs.ensure_base_path(video_path)
     sly.fs.silent_remove(video_path)
     video = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'VP90'), state["fps"], (width, height))
-    #video = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'avc1'), 3, (width, height))
-    #video = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'mp4v'), 3, (width, height))
     report_every = max(5, math.ceil(len(rectangles) / 100))
-    progress = sly.Progress("Rendering video", len(rectangles))
+    progress = sly.Progress("Rendering frames", len(rectangles))
+    refresh_progress_preview(api, task_id, progress)
     for i, rect in enumerate(rectangles):
         frame = img.copy()
         rect: sly.Rectangle
@@ -106,11 +106,15 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
         progress.iter_done_report()
         if i % report_every == 0:
             refresh_progress_preview(api, task_id, progress)
-    #refresh_progress_preview(api, task_id, progress)
-    refresh_progress_preview(api, task_id, sly.Progress("Saving video file", 1))
+
+    progress = sly.Progress("Saving video file", 1)
+    progress.iter_done_report()
+    refresh_progress_preview(api, task_id, progress)
     video.release()
 
-    refresh_progress_preview(api, task_id, sly.Progress("Uploading video", 1))
+    progress = sly.Progress("Uploading video", 1)
+    progress.iter_done_report()
+    refresh_progress_preview(api, task_id, progress)
     remote_video_path = os.path.join(f"/sliding-window/{task_id}", "preview.mp4")
     if api.file.exists(team_id, remote_video_path):
         api.file.remove(team_id, remote_video_path)
@@ -228,6 +232,7 @@ def main():
 
     state["previewLoading"] = False
     data["progressPreview"] = 0
+    data["progressPreviewMessage"] = "Rendering frames"
     data["progressPreviewCurrent"] = 0
     data["progressPreviewTotal"] = 0
 
