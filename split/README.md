@@ -21,41 +21,39 @@
 
 # Overview
 
-App splits all images and their labels using sliding window approach. Play with sliding window configuration and preview results before start splitting. All results will be saved to a new project.
+App splits all images and their labels using sliding window approach. Play with sliding window configuration and preview results before start splitting. All results will be saved to a new project. All crops can be mered back with another app `Sliding window merge`. 
+
+Industries and use cases: 
+- microscopic images 
+- satellite images
+- images in huge resolution: defects detection, quality assurance in production
+- split images for labelers 
+- split images for neural network inference
 
 # How To Use
 
-
-1. Label several objects as foregrounds, you can use `Seeds` project from ecosystem.
-
-
-1. Add app from ecosystem to your team
-
-<img  data-key="sly-module-link" data-module-slug="supervisely-ecosystem/flying-objects" src="https://i.imgur.com/wxe0fR7.png" width="300"/>   
-
-2. Label foregrounds with polygons or masks. You can use demo images from project [`Seeds`](https://ecosystem.supervise.ly/projects/seeds) from Ecosystem
-
-<img  data-key="sly-module-link" data-module-slug="supervisely-ecosystem/seeds" src="https://i.imgur.com/E5xmBRH.png" width="300"/>   
-
-3. Prepare backgrounds - it is a project or dataset with background images. You can use dataset `01_backgrounds` from project `Seeds` as example
-
-4. Run app from the context menu of project with labeled foregrounds:
-
-<img src="https://i.imgur.com/6i0Z8Nm.png"/>
-
-5. Generate synthetic data with different settings and save experiments results to different projects / datasets.
-
-6. Close app manually
-
-
-**Watch demo video**:
-
-
-<a data-key="sly-embeded-video-link" href="https://youtu.be/DazA1SSQOK8" data-video-code="DazA1SSQOK8">
-    <img src="https://i.imgur.com/TDGyy1E.png" alt="SLY_EMBEDED_VIDEO_LINK"  style="max-width:100%;">
+<a data-key="sly-embeded-video-link" href="https://youtu.be/wbxXPyW5pLA" data-video-code="wbxXPyW5pLA">
+    <img src="https://i.imgur.com/MS4dkKi.png" alt="SLY_EMBEDED_VIDEO_LINK"  style="max-width:100%;">
 </a>
+
+All images and their annotations will be split and saved to a new project. Also sliding window configuration is saved to project info.
+
+Cropped image names are in the following format: 
+
+`<image name>___<window index>_<window top coordinate>_<window left coordinate>.<image extension>`
+
+for example:
+
+`IMG_0748___0004_288_480.jpeg`
+- image name: `IMG_0748`
+- window index with leading zeros: `0004`
+- window top coordinate: `288`
+- window left coordinate: `480`
+- image extension: `jpeg`
+
+Such naming allows to perform opposite operation: merge all crops and labels to a single image.
 
 # Screenshots
 
-<img src="https://i.imgur.com/izY9tR7.png"/>
+<img src="https://i.imgur.com/RXTCyNs.png"/>
 
