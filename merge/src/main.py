@@ -85,14 +85,14 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
                 final_ann = final_ann.clone(img_tags=final_ann.img_tags.merge_without_duplicates(ann.img_tags))
             merged_image_info = api.image.upload_np(dst_dataset.id, original_name, final_image)
             api.annotation.upload_ann(merged_image_info.id, final_ann)
-            progress.iter_done_report()
+            progress.iters_done_report(len(images))
 
     api.task.set_output_project(task_id, dst_project.id, dst_project.name)
     app.stop()
 
 
 def main():
-    app.run(initial_events=[{"command": "import_videos"}])
+    app.run(initial_events=[{"command": "merge"}])
 
 
 if __name__ == "__main__":
