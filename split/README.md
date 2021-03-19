@@ -36,7 +36,9 @@ Industries and use cases:
     <img src="https://i.imgur.com/MS4dkKi.png" alt="SLY_EMBEDED_VIDEO_LINK"  style="max-width:100%;">
 </a>
 
-All images and their annotations will be split and saved to a new project. Also sliding window configuration is saved to project info.
+All images and their annotations will be split and saved to a new project. Also sliding window configuration is saved in project info.
+
+<img src="https://i.imgur.com/MS4dkKi.png">
 
 Cropped image names are in the following format: 
 
@@ -51,7 +53,8 @@ for example:
 - window left coordinate: `480`
 - image extension: `jpeg`
 
-Such naming allows to perform opposite operation: merge all crops and labels to a single image.
+Such naming allows to perform opposite operation: merge all crops and labels to a single image another app.
+
 
 # Screenshots
 
