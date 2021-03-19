@@ -9,7 +9,7 @@ team_id = int(os.environ['context.teamId'])
 workspace_id = int(os.environ['context.workspaceId'])
 project_id = int(os.environ['modal.state.slyProjectId'])
 
-dst_project_name = int(os.environ['modal.state.resultProjectName'])
+dst_project_name = os.environ['modal.state.resultProjectName']
 
 src_project = app.public_api.project.get_info_by_id(project_id)
 if src_project is None:
