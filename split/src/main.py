@@ -2,6 +2,7 @@ import os
 import random
 import cv2
 import supervisely_lib as sly
+import math
 import imgaug.augmenters as iaa
 from supervisely_lib.geometry.sliding_windows_fuzzy import SlidingWindowsFuzzy, SlidingWindowBorderStrategy
 
@@ -59,6 +60,9 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     ann_json = api.annotation.download(image_info.id).annotation
     ann = sly.Annotation.from_json(ann_json, meta)
 
+    if state["drawLabels"] is True:
+        ann.draw_pretty(img, thickness=3)
+
     h, w = img.shape[:2]
     max_right = w - 1
     max_bottom = h - 1
@@ -87,6 +91,7 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     video = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'VP90'), state["fps"], (width, height))
     #video = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'avc1'), 3, (width, height))
     #video = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'mp4v'), 3, (width, height))
+    report_every = max(5, math.ceil(len(rectangles) / 100))
     progress = sly.Progress("Rendering video", len(rectangles))
     for i, rect in enumerate(rectangles):
         frame = img.copy()
@@ -99,9 +104,11 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
         video.write(frame_bgr)
 
         progress.iter_done_report()
-        if progress.need_report():
+        if i % report_every == 0:
             refresh_progress_preview(api, task_id, progress)
+    refresh_progress_preview(api, task_id, progress)
     video.release()
+
 
     remote_video_path = os.path.join(f"/sliding-window/{task_id}", "preview.mp4")
     if api.file.exists(team_id, remote_video_path):
