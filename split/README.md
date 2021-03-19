@@ -36,7 +36,9 @@ Industries and use cases:
     <img src="https://i.imgur.com/MS4dkKi.png" alt="SLY_EMBEDED_VIDEO_LINK"  style="max-width:100%;">
 </a>
 
-All images and their annotations will be split and saved to a new project. Also sliding window configuration is saved in project info.
+All images and their annotations will be split and saved to a new project. Also sliding window configuration is saved in project info. Just go to project -> `Info` tab.
+
+<img src="https://i.imgur.com/usAjOiM.png"/>
 
 Cropped image names are in the following format: 
 
