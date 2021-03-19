@@ -21,7 +21,7 @@
 
 # Overview
 
-App generates synthetic data for detection / segmentation / instance segmentation tasks. It copies labeled objects (foregrounds), applies augmentations and pastes them to background images.
+App splits all images and their labels using sliding window approach. Play with sliding window configuration and preview results before start splitting. All results will be saved to a new project.
 
 # How To Use
 

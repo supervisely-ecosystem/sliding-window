@@ -6,8 +6,8 @@
     "images",
     "transform"
   ],
-  "description": "Configure, preview and split images with annotations using sliding window",
-  "docker_image": "supervisely/base-py-sdk:6.1.58",
+  "description": "Configure, preview and split images and annotations with sliding window",
+  "docker_image": "supervisely/base-py-sdk:6.1.59",
   "main_script": "split/src/main.py",
   "gui_template": "split/src/gui.html",
   "task_location": "workspace_tasks",
