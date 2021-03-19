@@ -106,10 +106,11 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
         progress.iter_done_report()
         if i % report_every == 0:
             refresh_progress_preview(api, task_id, progress)
-    refresh_progress_preview(api, task_id, progress)
+    #refresh_progress_preview(api, task_id, progress)
+    refresh_progress_preview(api, task_id, sly.Progress("Saving video file", 1))
     video.release()
 
-
+    refresh_progress_preview(api, task_id, sly.Progress("Uploading video", 1))
     remote_video_path = os.path.join(f"/sliding-window/{task_id}", "preview.mp4")
     if api.file.exists(team_id, remote_video_path):
         api.file.remove(team_id, remote_video_path)
