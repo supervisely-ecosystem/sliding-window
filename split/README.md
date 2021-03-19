@@ -38,8 +38,6 @@ Industries and use cases:
 
 All images and their annotations will be split and saved to a new project. Also sliding window configuration is saved in project info.
 
-<img src="https://i.imgur.com/MS4dkKi.png">
-
 Cropped image names are in the following format: 
 
 `<image name>___<window index>_<window top coordinate>_<window left coordinate>.<image extension>`
