@@ -21,7 +21,7 @@
 
 # Overview
 
-App splits all images and their labels using sliding window approach. Play with sliding window configuration and preview results before start splitting. All results will be saved to a new project. All crops can be mered back with another app `Sliding window merge`. 
+App splits all images and their labels using sliding window approach. Play with sliding window configuration and preview results before start splitting. All results will be saved to a new project. All crops can be mered back with another [Sliding window merge](https://ecosystem.supervise.ly/apps/supervisely-ecosystem%252Fsliding-window%252Fmerge) app. 
 
 Industries and use cases: 
 - microscopic images 

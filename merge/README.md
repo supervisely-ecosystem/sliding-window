@@ -20,7 +20,7 @@
 
 # Overview
 
-App merges images (and labels) that were split by `Sliding window split` app. Merge results are saved to a new project, information about input project is added as project metadata.
+App merges images (and labels) that were split by [Sliding window split](https://ecosystem.supervise.ly/apps/supervisely-ecosystem%252Fsliding-window%252Fsplit) app. Merge results are saved to a new project, information about input project is added as project metadata.
 
 # How To Use
 
