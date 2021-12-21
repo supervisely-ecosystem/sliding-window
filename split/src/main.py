@@ -19,8 +19,8 @@ if project_info is None:
     raise RuntimeError(f"Project id={project_id} not found")
 
 meta = sly.ProjectMeta.from_json(app.public_api.project.get_meta(project_id))
-if len(meta.obj_classes) == 0:
-    raise ValueError("Project should have at least one class")
+# if len(meta.obj_classes) == 0:
+#     raise ValueError("Project should have at least one class")
 
 images_info = []
 
