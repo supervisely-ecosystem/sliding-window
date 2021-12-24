@@ -43,6 +43,16 @@ def refresh_progress_preview(api: sly.Api, task_id, progress: sly.Progress):
     api.task.set_fields(task_id, fields)
 
 
+def check_sliding_sizes_by_image(img_info, state):
+    if state["windowHeight"] > img_info.height:
+        state["windowHeight"] = img_info.height
+
+    if state["windowWidth"] > img_info.width:
+        state["windowWidth"] = img_info.width
+
+    return 0
+
+
 @app.callback("preview")
 @sly.timeit
 def preview(api: sly.Api, task_id, context, state, app_logger):
@@ -52,10 +62,13 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     ]
     api.task.set_fields(task_id, fields)
 
+    image_info = random.choice(images_info)
+    check_sliding_sizes_by_image(img_info=image_info, state=state)
+
     slider = SlidingWindowsFuzzy([state["windowHeight"], state["windowWidth"]],
                                  [state["overlapY"], state["overlapX"]],
                                  state["borderStrategy"])
-    image_info = random.choice(images_info)
+
     img = api.image.download_np(image_info.id)
 
     ann_json = api.annotation.download(image_info.id).annotation
@@ -164,7 +177,15 @@ def split(api: sly.Api, task_id, context, state, app_logger):
     dst_datasets = {}
 
     progress = sly.Progress("SW split", len(images_info))
+
+    state_backup = state
+
     for image_info in images_info:
+        check_sliding_sizes_by_image(img_info=image_info, state=state)
+        slider = SlidingWindowsFuzzy([state["windowHeight"], state["windowWidth"]],
+                                     [state["overlapY"], state["overlapX"]],
+                                     state["borderStrategy"])
+
         if image_info.dataset_id not in dst_datasets:
             dataset_info = api.dataset.get_info_by_id(image_info.dataset_id)
             dst_datasets[image_info.dataset_id] = api.dataset.create(dst_project.id, dataset_info.name, dataset_info.description)
@@ -202,6 +223,8 @@ def split(api: sly.Api, task_id, context, state, app_logger):
         progress.iter_done_report()
         if progress.need_report():
             refresh_progress_split(api, task_id, progress)
+
+        state = state_backup
 
     res_project = api.project.get_info_by_id(dst_project.id)
     fields = [
