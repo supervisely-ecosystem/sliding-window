@@ -3,6 +3,25 @@ import numpy as np
 from collections import defaultdict
 import supervisely_lib as sly
 
+
+
+class Regexps:
+    filename_re = r"\w+(?=\___)"
+    settings_re = r"(?<=\___)\w+"
+
+    @staticmethod
+    def extract_by_regexp(filename, regexp):
+        import re
+        title_search = re.search(pattern=regexp, string=filename)
+        if title_search:
+            return title_search.group(0)
+
+    @staticmethod
+    def get_ext(filename):
+        return filename[filename.rindex('.'):]
+
+
+
 app: sly.AppService = sly.AppService()
 
 team_id = int(os.environ['context.teamId'])
@@ -49,10 +68,9 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
         max_height = defaultdict(int)
         max_width = defaultdict(int)
         for image_info, ann in zip(images, anns):
-            real_name = image_info.name.split("___")[0]
-            ext = sly.fs.get_file_ext(image_info.name)
-            settings = image_info.name.split("___")[1]
-            settings = settings.replace(ext, "")
+            real_name = Regexps.extract_by_regexp(image_info.name, Regexps.filename_re)
+            ext = Regexps.get_ext(image_info.name)
+            settings = Regexps.extract_by_regexp(image_info.name, Regexps.settings_re)
 
             window_index = int(settings.split("_")[0])
             window_top = int(settings.split("_")[1])
