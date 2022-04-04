@@ -68,6 +68,8 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
         max_height = defaultdict(int)
         max_width = defaultdict(int)
         for image_info, ann in zip(images, anns):
+            sly.logger.info(image_info.name)
+            
             real_name = Regexps.extract_by_regexp(image_info.name, Regexps.filename_re)
             ext = Regexps.get_ext(image_info.name)
             settings = Regexps.extract_by_regexp(image_info.name, Regexps.settings_re)
