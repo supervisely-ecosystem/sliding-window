@@ -1,7 +1,8 @@
 import os
 import numpy as np
 from collections import defaultdict
-import supervisely_lib as sly
+import supervisely as sly
+from supervisely.app.v1.app_service import AppService
 
 
 
@@ -22,7 +23,7 @@ class Regexps:
 
 
 
-app: sly.AppService = sly.AppService()
+app: AppService = AppService()
 
 team_id = int(os.environ['context.teamId'])
 workspace_id = int(os.environ['context.workspaceId'])

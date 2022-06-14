@@ -5,10 +5,11 @@ import supervisely_lib as sly
 import math
 import imgaug.augmenters as iaa
 from supervisely_lib.geometry.sliding_windows_fuzzy import SlidingWindowsFuzzy, SlidingWindowBorderStrategy
+from supervisely.app.v1.app_service import AppService
 
 import init_ui
 
-app: sly.AppService = sly.AppService()
+app: AppService = AppService()
 
 team_id = int(os.environ['context.teamId'])
 workspace_id = int(os.environ['context.workspaceId'])
@@ -135,7 +136,7 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
 
     fields = [
         {"field": "state.previewLoading", "payload": False},
-        {"field": "data.videoUrl", "payload": file_info.full_storage_url},
+        {"field": "data.videoUrl", "payload": file_info.storage_path},
     ]
     api.task.set_fields(task_id, fields)
 
