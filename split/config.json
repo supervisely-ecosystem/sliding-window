@@ -5,7 +5,7 @@
     "images",
     "data transformation",
     "annotation transformation",
-    "data-operations"
+    "data operations"
   ],
   "description": "Configure, preview and split images and annotations with sliding window",
   "docker_image": "supervisely/base-py-sdk:6.23.1",
