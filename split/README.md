@@ -1,5 +1,6 @@
 <div align="center" markdown>
-<img src="https://i.imgur.com/6PAkxyw.png"/>
+<img src="![sliding window split](https://user-images.githubusercontent.com/48245050/182573050-398ed69f-059f-49ba-b549-c3e1437fc839.png)
+"/>
 
 # Sliding Window Split
 
