@@ -1,5 +1,6 @@
 <div align="center" markdown>
-<img src="https://i.imgur.com/KmX0Rnx.png"/>
+<img src="![sliding window merge](https://user-images.githubusercontent.com/48245050/182572670-10a625d0-872e-455f-ab3a-e4e466fe2b7a.png)
+"/>
 
 # Sliding Window Merge
 
