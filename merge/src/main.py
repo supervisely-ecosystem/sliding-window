@@ -1,9 +1,8 @@
 from collections import defaultdict
 
+import globals as g
 import numpy as np
 import supervisely as sly
-
-import globals as g
 
 
 class Regexps:

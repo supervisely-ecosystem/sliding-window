@@ -3,3 +3,8 @@ secret_debug.env
 venv
 supervisely_lib
 images/*
+
+split/src/debug
+split/src/__pycache__
+merge/src/debug
+merge/src/__pycache__

@@ -29,10 +29,10 @@
             <el-input-number class="mt5" v-model="state.windowWidth" :min="1" :max="10000"></el-input-number>
             <span class="ml10" style="color: gray">pixels</span>
             <div class="mt15"><b>Vertical overlap (y axis)</b></div>
-            <el-input-number class="mt5" v-model="state.overlapY" :min="1" :max="10000"></el-input-number>
+            <el-input-number class="mt5" v-model="state.overlapY" :min="0" :max="10000"></el-input-number>
             <span class="ml10" style="color: gray">pixels</span>
             <div class="mt15"><b>Horizontal overlap (x axis)</b></div>
-            <el-input-number class="mt5" v-model="state.overlapX" :min="1" :max="10000"></el-input-number>
+            <el-input-number class="mt5" v-model="state.overlapX" :min="0" :max="10000"></el-input-number>
             <span class="ml10" style="color: gray">pixels</span>
             <sly-field style="margin-top: 15px;" title="Border strategy">
                 <el-radio-group class="fflex"
