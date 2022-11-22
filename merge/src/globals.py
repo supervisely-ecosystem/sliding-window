@@ -10,10 +10,9 @@ sly.logger.info(f"Root source directory: {root_source_path}")
 sys.path.append(root_source_path)
 
 # only for debug
-from dotenv import load_dotenv
-
-load_dotenv(os.path.expanduser("~/supervisely.env"))
-load_dotenv("merge/debug.env")
+# from dotenv import load_dotenv
+# load_dotenv(os.path.expanduser("~/supervisely.env"))
+# load_dotenv("merge/debug.env")
 
 app: AppService = AppService()
 
