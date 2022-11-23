@@ -52,8 +52,8 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
         for image_info, ann in zip(images, anns):
             # sly.logger.info(f'{image_info.name=}')
             
-            # real_name = Regexps.extract_by_regexp(image_info.name, Regexps.filename_re)
             real_name = image_info.name.split("___")[0]
+            # real_name = Regexps.extract_by_regexp(image_info.name, Regexps.filename_re)
             ext = Regexps.get_ext(image_info.name)
             settings = Regexps.extract_by_regexp(image_info.name, Regexps.settings_re)
 
