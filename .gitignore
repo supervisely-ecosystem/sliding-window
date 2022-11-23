@@ -1,5 +1,13 @@
 secret_debug.env
 .idea
 venv
+.venv
 supervisely_lib
+supervisely
 images/*
+
+split/src/debug
+split/src/__pycache__
+merge/src/debug
+merge/src/__pycache__
+.DS_Store

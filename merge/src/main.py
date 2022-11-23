@@ -1,9 +1,8 @@
-import os
-import numpy as np
 from collections import defaultdict
-import supervisely as sly
-from supervisely.app.v1.app_service import AppService
 
+import globals as g
+import numpy as np
+import supervisely as sly
 
 
 class Regexps:
@@ -22,45 +21,27 @@ class Regexps:
         return filename[filename.rindex('.'):]
 
 
-
-app: AppService = AppService()
-
-team_id = int(os.environ['context.teamId'])
-workspace_id = int(os.environ['context.workspaceId'])
-project_id = int(os.environ['modal.state.slyProjectId'])
-
-dst_project_name = os.environ['modal.state.resultProjectName']
-
-src_project = app.public_api.project.get_info_by_id(project_id)
-if src_project is None:
-    raise RuntimeError(f"Project id={project_id} not found")
-
-meta = sly.ProjectMeta.from_json(app.public_api.project.get_meta(project_id))
-# if len(meta.obj_classes) == 0:
-#     raise ValueError("Project should have at least one class")
-
-
-@app.callback("merge")
+@g.app.callback("merge")
 @sly.timeit
 def merge(api: sly.Api, task_id, context, state, app_logger):
-    dst_project = api.project.create(workspace_id, dst_project_name, change_name_if_conflict=True)
-    api.project.update_meta(dst_project.id, meta.to_json())
+    dst_project = api.project.create(g.WORKSPACE_ID, g.DST_PROJECT_NAME, change_name_if_conflict=True)
+    api.project.update_meta(dst_project.id, g.PROJECT_META.to_json())
     api.project.update_custom_data(dst_project.id, {
         "input_project": {
-            "id": src_project.id,
-            "name": src_project.name
+            "id": g.SRC_PROJECT.id,
+            "name": g.SRC_PROJECT.name
         }
     })
 
-    progress = sly.Progress("Merging images", api.project.get_images_count(src_project.id))
-    for src_dataset in api.dataset.get_list(src_project.id):
+    progress = sly.Progress("Merging images", api.project.get_images_count(g.SRC_PROJECT.id))
+    for src_dataset in api.dataset.get_list(g.SRC_PROJECT.id):
         dst_dataset = api.dataset.create(dst_project.id, src_dataset.name)
         images = api.image.get_list(src_dataset.id)
         image_ids = [image_info.id for image_info in images]
         #image_names = [image_info.name for image_info in images]
 
         ann_infos = api.annotation.download_batch(src_dataset.id, image_ids)
-        anns = [sly.Annotation.from_json(ann_info.annotation, meta) for ann_info in ann_infos]
+        anns = [sly.Annotation.from_json(ann_info.annotation, g.PROJECT_META) for ann_info in ann_infos]
 
         parts_ids = defaultdict(list)
         parts_top_left = defaultdict(list)
@@ -71,7 +52,8 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
         for image_info, ann in zip(images, anns):
             # sly.logger.info(f'{image_info.name=}')
             
-            real_name = Regexps.extract_by_regexp(image_info.name, Regexps.filename_re)
+            real_name = image_info.name.split("___")[0]
+            # real_name = Regexps.extract_by_regexp(image_info.name, Regexps.filename_re)
             ext = Regexps.get_ext(image_info.name)
             settings = Regexps.extract_by_regexp(image_info.name, Regexps.settings_re)
 
@@ -109,11 +91,11 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
             progress.iters_done_report(len(images))
 
     api.task.set_output_project(task_id, dst_project.id, dst_project.name)
-    app.stop()
+    g.app.stop()
 
 
 def main():
-    app.run(initial_events=[{"command": "merge"}])
+    g.app.run(initial_events=[{"command": "merge"}])
 
 
 if __name__ == "__main__":

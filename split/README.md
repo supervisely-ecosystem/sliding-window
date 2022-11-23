@@ -29,6 +29,21 @@ Industries and use cases:
 - split images for labelers 
 - split images for neural network inference
 
+## Border strategy modes
+
+<table>
+  <tr>
+    <th>Shift window</th>
+    <th>Add padding</th>
+    <th>Change size</th>
+  </tr>
+  <tr>
+    <td><img src="https://user-images.githubusercontent.com/48913536/203523141-c3c0c035-4eae-422b-8bf8-ea50d888f7a0.gif"/></td>
+    <td><img src="https://user-images.githubusercontent.com/48913536/203523131-c4794356-87d1-4a9d-8b4a-c7b21e8f6dbe.gif"/></td>
+    <td><img src="https://user-images.githubusercontent.com/48913536/203523151-24d82948-5b00-42fc-8231-b2c715fc7e68.gif"/></td>
+  </tr>
+</table>
+
 # How To Use
 
 <a data-key="sly-embeded-video-link" href="https://youtu.be/wbxXPyW5pLA" data-video-code="wbxXPyW5pLA">
@@ -53,7 +68,6 @@ for example:
 - image extension: `jpeg`
 
 Such naming allows to perform opposite operation: merge all crops and labels to a single image another app.
-
 
 # Screenshots
 
