@@ -48,9 +48,20 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     image_info = random.choice(g.IMAGES_INFO)
     check_sliding_sizes_by_image(img_info=image_info, state=state)
 
-    slider = SlidingWindowsFuzzy([state["windowHeight"], state["windowWidth"]],
-                                 [state["overlapY"], state["overlapX"]],
-                                 state["borderStrategy"])
+    try:
+        slider = SlidingWindowsFuzzy([state["windowHeight"], state["windowWidth"]],
+                                     [state["overlapY"], state["overlapX"]],
+                                     state["borderStrategy"])
+    except:
+        message = "Wrong sliding window settings, overlap is too high"
+        sly.logger.error(message)
+        fields = [
+            {"field": "data.videoUrl", "payload": None},
+            {"field": "state.previewLoading", "payload": False},
+        ]
+        api.task.set_fields(task_id, fields)
+        g.app.show_modal_window(message, level="error")
+        return
 
     img = api.image.download_np(image_info.id)
 
