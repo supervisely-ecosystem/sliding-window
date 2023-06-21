@@ -245,12 +245,20 @@ def split(api: sly.Api, task_id, context, state, app_logger):
                 resize_aug = iaa.Resize(
                     {"height": state["resizeValue"], "width": "keep-aspect-ratio"}
                 )
-                crop_image = resize_aug(image=crop_image.copy())
-                crop_ann = crop_ann.resize(crop_image.shape[:2])
+                resized_image = resize_aug(image=crop_image.copy())
+                try:
+                    resized_ann = crop_ann.resize(resized_image.shape[:2])
+                    crop_anns.append(resized_ann)
+                    crop_images.append(resized_image)
+                except Exception as e:
+                    sly.logger.warn(f"Can not resize {image_info.name} image and annotations. Skipped")
+                    crop_images.append(crop_image)
+                    crop_anns.append(crop_ann)
+            else:
+                crop_images.append(crop_image)
+                crop_anns.append(crop_ann)
 
             crop_names.append(crop_name)
-            crop_images.append(crop_image)
-            crop_anns.append(crop_ann)
 
         dst_image_infos = api.image.upload_nps(dst_dataset.id, crop_names, crop_images)
         dst_image_ids = [dst_img_info.id for dst_img_info in dst_image_infos]
