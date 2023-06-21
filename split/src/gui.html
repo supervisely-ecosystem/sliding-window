@@ -25,6 +25,7 @@
         <sly-field
             style="margin-top: 15px"
             title="Pixels or image size percentage"
+            description="Select to use in sliding window and overlap sizes"
         >
             <el-switch
             v-model="state.usePercents"
@@ -37,7 +38,11 @@
             @change="state.usePercents == false ? state.resizeWindow = false : null"
             ></el-switch>
         </sly-field>
-        <sly-field style="margin-top: 15px" title="Select to use a square form.">
+        <sly-field 
+            style="margin-top: 15px"
+            title="Square form for sliding window"
+            description="Select to use a square form sliding window"
+        >
             <el-switch
             v-model="state.useSquare"
             width="58"
