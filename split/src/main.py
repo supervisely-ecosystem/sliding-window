@@ -251,7 +251,7 @@ def split(api: sly.Api, task_id, context, state, app_logger):
                     crop_anns.append(resized_ann)
                     crop_images.append(resized_image)
                 except Exception as e:
-                    sly.logger.warn(f"Can not resize {image_info.name} image and annotations. Skipped")
+                    sly.logger.warn(f"Can not resize {image_info.name} image and annotations.")
                     crop_images.append(crop_image)
                     crop_anns.append(crop_ann)
             else:
