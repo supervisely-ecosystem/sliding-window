@@ -183,7 +183,7 @@ def split(api: sly.Api, task_id, context, state, app_logger):
                         .format(state["resProjectName"], dst_project.name))
     api.project.update_meta(dst_project.id, g.PROJECT_META.to_json())
 
-    px = state["usePercent"] is False
+    px = state["usePercents"] is False
     windowHeight = f'{state["windowHeightPx"]}px' if px else f'{state["windowHeightPercent"]}%'
     windowWidth = f'{state["windowWidthPx"]}px' if px else f'{state["windowWidthPercent"]}%'
     overlapY = f'{state["overlapYPx"]}px' if px else f'{state["overlapYPercent"]}%'
