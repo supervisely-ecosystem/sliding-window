@@ -6,7 +6,7 @@ import cv2
 import globals as g
 import imgaug.augmenters as iaa
 import init_ui
-import supervisely_lib as sly
+import supervisely as sly
 from supervisely.geometry.sliding_windows_fuzzy import (
     SlidingWindowBorderStrategy, SlidingWindowsFuzzy)
 
@@ -33,7 +33,35 @@ def check_sliding_sizes_by_image(img_info, state):
     if state["windowWidth"] > img_info.width:
         state["windowWidth"] = img_info.width
 
+    if state["windowHeightPercent"] > 100:
+        state["windowHeightPercent"] = 100
+
+    if state["windowWidthPercent"] > 100:
+        state["windowWidthPercent"] = 100
+
     return 0
+
+
+def get_sliding_windows_sizes(image_info, state):
+    if state["usePercents"] is True:
+        w_height = math.ceil(image_info.height * state["windowHeightPercent"] / 100)
+        overlap_y = math.ceil(w_height * state["overlapYPercent"] / 100)
+        if state["useSquare"] is True:
+            w_width = w_height
+            overlap_x = overlap_y
+        else:
+            w_width = math.ceil(image_info.width * state["windowWidthPercent"] / 100)
+            overlap_x = math.ceil(w_width * state["overlapXPercent"] / 100)
+    else:
+        w_height = state["windowHeightPx"]
+        w_width = state["windowWidthPx"] if state["useSquare"] is False else w_height
+        overlap_y = state["overlapYPx"]
+        overlap_x = state["overlapXPx"] if state["useSquare"] is False else overlap_y
+
+    state["windowHeight"] = w_height
+    state["windowWidth"] = w_width
+    state["overlapY"] = overlap_y
+    state["overlapX"] = overlap_x
 
 
 @g.app.callback("preview")
@@ -46,6 +74,7 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     api.task.set_fields(task_id, fields)
 
     image_info = random.choice(g.IMAGES_INFO)
+    get_sliding_windows_sizes(image_info=image_info, state=state)
     check_sliding_sizes_by_image(img_info=image_info, state=state)
 
     try:
@@ -146,9 +175,13 @@ def refresh_progress_split(api: sly.Api, task_id, progress: sly.Progress):
 @g.app.callback("split")
 @sly.timeit
 def split(api: sly.Api, task_id, context, state, app_logger):
-    slider = SlidingWindowsFuzzy([state["windowHeight"], state["windowWidth"]],
-                                 [state["overlapY"], state["overlapX"]],
-                                 state["borderStrategy"])
+    image_info = random.choice(g.IMAGES_INFO)
+    get_sliding_windows_sizes(image_info=image_info, state=state)
+    slider = SlidingWindowsFuzzy(
+        [state["windowHeight"], state["windowWidth"]],
+        [state["overlapY"], state["overlapX"]],
+        state["borderStrategy"],
+    )
 
     dst_project = api.project.create(g.WORKSPACE_ID, state["resProjectName"], change_name_if_conflict=True)
     if dst_project.name != state["resProjectName"]:
@@ -202,13 +235,21 @@ def split(api: sly.Api, task_id, context, state, app_logger):
             crop_names.append(crop_name)
 
             crop_ann = ann.relative_crop(window)
-            crop_anns.append(crop_ann)
 
             if state["borderStrategy"] == str(SlidingWindowBorderStrategy.ADD_PADDING):
                 crop_image = sly.image.crop_with_padding(img, window)
             else:
                 crop_image = sly.image.crop(img, window)
+            if state["resizeWindow"] is True:
+                resize_aug = iaa.Resize(
+                    {"height": state["resizeValue"], "width": "keep-aspect-ratio"}
+                )
+                crop_image = resize_aug(image=crop_image.copy())
+                crop_ann = crop_ann.resize(crop_image.shape[:2])
+
+            crop_names.append(crop_name)
             crop_images.append(crop_image)
+            crop_anns.append(crop_ann)
 
         dst_image_infos = api.image.upload_nps(dst_dataset.id, crop_names, crop_images)
         dst_image_ids = [dst_img_info.id for dst_img_info in dst_image_infos]
