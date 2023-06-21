@@ -1,6 +1,6 @@
 import os
 
-import supervisely_lib as sly
+import supervisely as sly
 
 
 def init_input_project(api: sly.Api, data: dict, project_info):
@@ -15,6 +15,22 @@ def init_settings(state):
     state["windowWidth"] = 256
     state["overlapY"] = 32
     state["overlapX"] = 32
+
+    state["usePercents"] = False
+    state["useSquare"] = False
+    state["windowHeightPx"] = 256
+    state["windowWidthPx"] = 256
+    state["overlapYPx"] = 32
+    state["overlapXPx"] = 32
+
+    state["windowHeightPercent"] = 20
+    state["windowWidthPercent"] = 20
+    state["overlapYPercent"] = 2
+    state["overlapXPercent"] = 2
+
+    state["resizeWindow"] = False
+    state["resizeValue"] = 0
+
     state["borderStrategy"] = "shift_window"  # "add_padding"
     state["fps"] = 4
     state["drawLabels"] = True

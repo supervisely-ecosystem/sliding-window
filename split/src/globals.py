@@ -2,7 +2,7 @@ import os
 import sys
 from pathlib import Path
 
-import supervisely_lib as sly
+import supervisely as sly
 from supervisely.app.v1.app_service import AppService
 
 root_source_path = str(Path(sys.argv[0]).parents[2])

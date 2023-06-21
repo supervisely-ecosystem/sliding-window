@@ -22,47 +22,217 @@
                   title="Settings"
                   subtitle="Configure sliding windows parameters"
                   style="min-width: 310px; max-width: 310px;">
-            <div><b>Window height</b></div>
-            <el-input-number class="mt5" v-model="state.windowHeight" :min="1" :max="10000"></el-input-number>
-            <span class="ml10" style="color: gray">pixels</span>
-            <div class="mt15"><b>Window width</b></div>
-            <el-input-number class="mt5" v-model="state.windowWidth" :min="1" :max="10000"></el-input-number>
-            <span class="ml10" style="color: gray">pixels</span>
-            <div class="mt15"><b>Vertical overlap (y axis)</b></div>
-            <el-input-number class="mt5" v-model="state.overlapY" :min="0" :max="10000"></el-input-number>
-            <span class="ml10" style="color: gray">pixels</span>
-            <div class="mt15"><b>Horizontal overlap (x axis)</b></div>
-            <el-input-number class="mt5" v-model="state.overlapX" :min="0" :max="10000"></el-input-number>
-            <span class="ml10" style="color: gray">pixels</span>
-            <sly-field style="margin-top: 15px;" title="Border strategy">
-                <el-radio-group class="fflex"
-                                v-model="state.borderStrategy"
-                                style="flex-direction: column; align-items: flex-start">
-                    <el-radio label="shift_window">
-                        <sly-field class="field-radio"
-                                   title="Shift window"
-                                   description="Window is shifted to fit into image">
-                        </sly-field>
-                    </el-radio>
-                    <el-radio style="margin-left: 0" label="add_padding">
-                        <sly-field class="field-radio"
-                                   title="Add padding"
-                                   description="Pad image at the bottom right">
-                        </sly-field>
-                    </el-radio>
-                    <el-radio style="margin-left: 0" label="change_size">
-                        <sly-field class="field-radio"
-                                   title="Change size"
-                                   description="Resize window without keeping aspect ratio">
-                        </sly-field>
-                    </el-radio>
-                </el-radio-group>
-            </sly-field>
-            <div><b>Visualization FPS</b></div>
-            <el-input-number class="mt5" v-model="state.fps" :min="1" :max="20"></el-input-number>
-            <div class="mt15"><b>Draw labels on preview</b></div>
-            <el-checkbox class="mt5" v-model="state.drawLabels">Draw labels</el-checkbox>
+        <sly-field
+            style="margin-top: 15px"
+            title="Pixels or image size percentage"
+            description="Select to use in sliding window and overlap sizes"
+        >
+            <el-switch
+            v-model="state.usePercents"
+            width="58"
+            on-text="%"
+            off-text="px"
+            on-color="#20a0ff"
+            off-color="#6cb74c"
+            style="padding-bottom: 5px"
+            @change="state.usePercents == false ? state.resizeWindow = false : null"
+            ></el-switch>
+        </sly-field>
+        <sly-field 
+            style="margin-top: 15px"
+            title="Square form for sliding window"
+            description="Select to use a square form sliding window"
+        >
+            <el-switch
+            v-model="state.useSquare"
+            width="58"
+            on-text="yes"
+            off-text="no"
+            on-color="#20a0ff"
+            off-color="#bfcbd9"
+            style="padding-bottom: 5px"
+            ></el-switch>
+        </sly-field>
 
+        <div v-if="!state.useSquare"><b>Window height</b></div>
+        <div v-if="state.useSquare"><b>Window size</b></div>
+        <el-input-number
+            size="small"
+            v-if="!state.usePercents"
+            class="mt5"
+            v-model="state.windowHeightPx"
+            :min="1"
+            :max="10000"
+        ></el-input-number>
+        <span v-if="!state.usePercents" class="ml10" style="color: gray"
+            >pixels</span
+        >
+        <el-input-number
+            size="small"
+            v-if="state.usePercents"
+            class="mt5"
+            v-model="state.windowHeightPercent"
+            :min="1"
+            :max="100"
+        ></el-input-number>
+        <span v-if="state.usePercents" class="ml10" style="color: gray"
+            >% of image height</span
+        >
+
+        <div v-if="!state.useSquare" class="mt15"><b>Window width</b></div>
+        <el-input-number
+            size="small"
+            v-if="!state.usePercents && !state.useSquare"
+            class="mt5"
+            v-model="state.windowWidthPx"
+            :min="1"
+            :max="10000"
+        ></el-input-number>
+        <span
+            v-if="!state.usePercents && !state.useSquare"
+            class="ml10"
+            style="color: gray"
+            >pixels</span
+        >
+        <el-input-number
+            size="small"
+            v-if="state.usePercents && !state.useSquare"
+            class="mt5"
+            v-model="state.windowWidthPercent"
+            :min="1"
+            :max="100"
+        ></el-input-number>
+        <span
+            v-if="state.usePercents && !state.useSquare"
+            class="ml10"
+            style="color: gray"
+            >% of image width</span
+        >
+
+        <div v-if="!state.useSquare" class="mt15">
+            <b>Vertical overlap (y axis)</b>
+        </div>
+        <div v-if="state.useSquare" class="mt15"><b>Overlap size</b></div>
+        <el-input-number
+            size="small"
+            v-if="!state.usePercents"
+            class="mt5"
+            v-model="state.overlapYPx"
+            :min="0"
+            :max="10000"
+        ></el-input-number>
+        <span v-if="!state.usePercents" class="ml10" style="color: gray"
+            >pixels</span
+        >
+        <el-input-number
+            size="small"
+            v-if="state.usePercents"
+            class="mt5"
+            v-model="state.overlapYPercent"
+            :min="0"
+            :max="100"
+        ></el-input-number>
+        <span v-if="state.usePercents" class="ml10" style="color: gray"
+            >% of window height</span
+        >
+
+        <div v-if="!state.useSquare" class="mt15">
+            <b>Horizontal overlap (x axis)</b>
+        </div>
+        <el-input-number
+            size="small"
+            v-if="!state.usePercents && !state.useSquare"
+            class="mt5"
+            v-model="state.overlapXPx"
+            :min="0"
+            :max="10000"
+        ></el-input-number>
+        <span
+            v-if="!state.usePercents && !state.useSquare"
+            class="ml10"
+            style="color: gray"
+            >pixels</span
+        >
+        <el-input-number
+            size="small"
+            v-if="state.usePercents && !state.useSquare"
+            class="mt5"
+            v-model="state.overlapXPercent"
+            :min="0"
+            :max="100"
+        ></el-input-number>
+        <span
+        v-if="state.usePercents && !state.useSquare"
+        class="ml10"
+        style="color: gray"
+        >% of window width</span
+        >
+        
+        <sly-field style="margin-top: 15px" title="Resize sliding window" description="Resize result sliding window by given height (px)">
+            <el-checkbox
+            :disabled="!state.usePercents"
+            class="mt5"
+            v-model="state.resizeWindow"
+            ></el-checkbox
+            >
+            <el-input-number
+            size="small"
+            :disabled="!state.usePercents || !state.resizeWindow"
+            class="mt5"
+            v-model="state.resizeValue"
+            :min="0"
+            :max="1000"
+            ></el-input-number>
+            <span
+                class="ml10"
+                style="color: gray"
+                >pixels</span
+            >
+        </sly-field>
+
+        <sly-field style="margin-top: 15px" title="Border strategy">
+            <el-radio-group
+            class="fflex"
+            v-model="state.borderStrategy"
+            style="flex-direction: column; align-items: flex-start"
+            >
+            <el-radio label="shift_window">
+                <sly-field
+                class="field-radio"
+                title="Shift window"
+                description="Window is shifted to fit into image"
+                >
+                </sly-field>
+            </el-radio>
+            <el-radio style="margin-left: 0" label="add_padding">
+                <sly-field
+                class="field-radio"
+                title="Add padding"
+                description="Pad image at the bottom right"
+                >
+                </sly-field>
+            </el-radio>
+            <el-radio style="margin-left: 0" label="change_size">
+                <sly-field
+                class="field-radio"
+                title="Change size"
+                description="Resize window without keeping aspect ratio"
+                >
+                </sly-field>
+            </el-radio>
+            </el-radio-group>
+        </sly-field>
+        <div><b>Visualization FPS</b></div>
+        <el-input-number
+            class="mt5"
+            v-model="state.fps"
+            :min="1"
+            :max="20"
+        ></el-input-number>
+        <div class="mt15"><b>Draw labels on preview</b></div>
+        <el-checkbox class="mt5" v-model="state.drawLabels"
+            >Draw labels</el-checkbox
+        >
         </sly-card>
         <sly-card title="Random Preview"
                   subtitle="Visualize sliding windows on random image as video"
