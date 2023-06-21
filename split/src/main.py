@@ -232,7 +232,6 @@ def split(api: sly.Api, task_id, context, state, app_logger):
                                                      window.top,
                                                      window.left,
                                                      sly.fs.get_file_ext(image_info.name))
-            crop_names.append(crop_name)
 
             crop_ann = ann.relative_crop(window)
 
