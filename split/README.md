@@ -47,12 +47,12 @@ Industries and use cases:
 # How To Use
 
 <a data-key="sly-embeded-video-link" href="https://youtu.be/wbxXPyW5pLA" data-video-code="wbxXPyW5pLA">
-    <img src="https://i.imgur.com/MS4dkKi.png" alt="SLY_EMBEDED_VIDEO_LINK"  style="max-width:100%;">
+    <img src="split/media/htu1.png" alt="SLY_EMBEDED_VIDEO_LINK"  style="max-width:100%;">
 </a>
 
 All images and their annotations will be split and saved to a new project. Also sliding window configuration is saved in project info. Just go to project -> `Info` tab.
 
-<img src="https://i.imgur.com/usAjOiM.png"/>
+<img src="split/media/htu2.png"/>
 
 Cropped image names are in the following format: 
 
@@ -71,5 +71,4 @@ Such naming allows to perform opposite operation: merge all crops and labels to 
 
 # Screenshots
 
-<img src="https://i.imgur.com/RXTCyNs.png"/>
-
+<img src="split/media/s1.png"/>
