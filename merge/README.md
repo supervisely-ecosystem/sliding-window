@@ -27,12 +27,12 @@ App merges images (and labels) that were split by [Sliding window split](https:/
 Just add app from Ecosystem to your team (if it's not there) and run it from the context menu of the project with cropped images. 
 
 <a data-key="sly-embeded-video-link" href="https://youtu.be/ACw8fIiLY50" data-video-code="ACw8fIiLY50">
-    <img src="https://i.imgur.com/eQYGwAb.png" alt="SLY_EMBEDED_VIDEO_LINK"  style="max-width:100%;">
+    <img src="merge/media/htu1.png" alt="SLY_EMBEDED_VIDEO_LINK"  style="max-width:100%;">
 </a>
 
 Input project info is saved to result project metadata:
 
-<img src="https://i.imgur.com/R5us9Iv.png"/>
+<img src="merge/media/htu2.png"/>
 
 
 
