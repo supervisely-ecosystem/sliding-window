@@ -14,7 +14,7 @@
   "gui_template": "split/src/gui.html",
   "task_location": "workspace_tasks",
   "isolate": true,
-  "icon": "https://i.imgur.com/nMhn7qf.png",
+  "icon": "https://github.com/supervisely-ecosystem/sliding-window/blob/c368c85c75f0ec877ed081a6f5ea8e3eaee4b801/media/spliticon.png",
   "icon_background": "#FFFFFF",
   "context_menu": {
     "target": [
