@@ -18,7 +18,7 @@
   },
   "task_location": "workspace_tasks",
   "isolate": true,
-  "icon": "https://i.imgur.com/MRgVuje.png",
+  "icon": "https://github.com/supervisely-ecosystem/sliding-window/blob/6c4e6d28e5df509b87b119de43d0152b1b05b3af/media/mergeicon.png",
   "icon_background": "#FFFFFF",
   "context_menu": {
     "target": [
