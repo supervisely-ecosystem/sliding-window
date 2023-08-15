@@ -57,6 +57,13 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
             ext = Regexps.get_ext(image_info.name)
             settings = Regexps.extract_by_regexp(image_info.name, Regexps.settings_re)
 
+            if settings is None:
+                raise RuntimeError(
+                    "Incorrect images names. Should be: "
+                    "<image name>___<window index>_<window top coordinate>_<window left coordinate>.<image extension> "
+                    "Use Sliding window split app first to correctly split images."
+                )
+
             window_index = int(settings.split("_")[0])
             window_top = int(settings.split("_")[1])
             window_left = int(settings.split("_")[2])
