@@ -66,6 +66,15 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
         {"field": "state.previewLoading", "payload": True},
     ]
     api.task.set_fields(task_id, fields)
+    if len(g.IMAGES_INFO) == 0:
+        message = f"Project {g.PROJECT_INFO.name} has no images"
+        fields = [
+            {"field": "data.videoUrl", "payload": None},
+            {"field": "state.previewLoading", "payload": False},
+        ]
+        api.task.set_fields(task_id, fields)
+        g.app.show_modal_window(message, level="error")
+        return
 
     image_info = random.choice(g.IMAGES_INFO)
     get_sliding_windows_sizes(image_info=image_info, state=state)
@@ -169,6 +178,12 @@ def refresh_progress_split(api: sly.Api, task_id, progress: sly.Progress):
 @g.app.callback("split")
 @sly.timeit
 def split(api: sly.Api, task_id, context, state, app_logger):
+    if len(g.IMAGES_INFO) == 0:
+        message = f"Project {g.PROJECT_INFO.name} has no images"
+        description = "Please, check your project and try again."
+        api.task.set_output_error(task_id, message, description)
+        g.app.show_modal_window(message, level="error")
+        return
     image_info = random.choice(g.IMAGES_INFO)
     get_sliding_windows_sizes(image_info=image_info, state=state)
     slider = SlidingWindowsFuzzy(
