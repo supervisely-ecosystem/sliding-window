@@ -84,13 +84,13 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
                                      state["borderStrategy"])
     except:
         message = "Wrong sliding window settings, overlap is too high"
-        sly.logger.error(message)
+        sly.logger.warn(message)
         fields = [
             {"field": "data.videoUrl", "payload": None},
             {"field": "state.previewLoading", "payload": False},
         ]
         api.task.set_fields(task_id, fields)
-        g.app.show_modal_window(message, level="error")
+        g.app.show_modal_window(message, level="error", log_message=False)
         return
 
     img = api.image.download_np(image_info.id)
