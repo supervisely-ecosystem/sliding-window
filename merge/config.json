@@ -8,8 +8,8 @@
     "data operations"
   ],
   "description": "Merge images and labels that were split by sliding window before",
-  "docker_image": "supervisely/data-operations:6.73.4",
-  "instance_version": "6.8.70",
+  "docker_image": "supervisely/data-operations:6.73.22",
+  "instance_version": "6.8.73",
   "main_script": "merge/src/main.py",
   "headless": true,
   "modal_template": "merge/src/modal.html",
