@@ -78,19 +78,24 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     get_sliding_windows_sizes(image_info=image_info, state=state)
     check_sliding_sizes_by_image(img_info=image_info, state=state)
 
-    try:
-        slider = SlidingWindowsFuzzy([state["windowHeight"], state["windowWidth"]],
-                                     [state["overlapY"], state["overlapX"]],
-                                     state["borderStrategy"])
-    except:
-        message = "Wrong sliding window settings, overlap is too high"
-        sly.logger.warn(message)
+    def _log_error_and_stop(msg):
+        sly.logger.warn(msg, exc_info=True)
         fields = [
             {"field": "data.videoUrl", "payload": None},
             {"field": "state.previewLoading", "payload": False},
         ]
         api.task.set_fields(task_id, fields)
-        g.app.show_modal_window(message, level="error", log_message=False)
+        g.app.show_modal_window(msg, level="error", log_message=False)
+        return
+    try:
+        slider = SlidingWindowsFuzzy([state["windowHeight"], state["windowWidth"]],
+                                     [state["overlapY"], state["overlapX"]],
+                                     state["borderStrategy"])
+    except (ValueError, RuntimeError) as re:
+        _log_error_and_stop(f"Wrong sliding window settings: {re}")
+        return
+    except Exception as e:
+        _log_error_and_stop(f"Unexpected error: {repr(e)}")
         return
 
     img = api.image.download_np(image_info.id)
@@ -99,7 +104,16 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     ann = sly.Annotation.from_json(ann_json, g.PROJECT_META)
 
     if state["drawLabels"] is True:
-        ann.draw_pretty(img, thickness=3)
+        if state["cleanLabels"] is True:
+            i = 0
+            label_id_to_area = {}
+            labels = []
+            for label in ann.labels:
+                label = label.clone(description=str(i))
+                label_id_to_area[i] = label.area
+                labels.append(label)
+                i += 1
+            ann = ann.clone(labels=labels)
 
     h, w = img.shape[:2]
     max_right = w - 1
@@ -132,6 +146,20 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     refresh_progress_preview(api, task_id, progress)
     for i, rect in enumerate(rectangles):
         frame = img.copy()
+        if state["drawLabels"] is True:
+            crop_ann = ann.relative_crop(rect)
+            temp_crop_img = frame[rect.top:rect.bottom + 1, rect.left:rect.right + 1].copy()
+            if state["cleanLabels"] is True:
+                filtered_labels = []
+                for label in crop_ann.labels:
+                    full_area = label_id_to_area[int(label.description)]
+                    if full_area == 0:
+                        continue
+                    if label.area / full_area * 100 > state["cleanLabelsThreshold"]:
+                        filtered_labels.append(label)
+                crop_ann = crop_ann.clone(labels=filtered_labels)
+            crop_ann.draw_pretty(temp_crop_img, thickness=3)
+            frame[rect.top:rect.bottom + 1, rect.left:rect.right + 1] = temp_crop_img
         rect: sly.Rectangle
         rect.draw_contour(frame, [255, 0, 0], thickness=5)
         if resize_aug is not None:
@@ -238,6 +266,18 @@ def split(api: sly.Api, task_id, context, state, app_logger):
         ann_json = api.annotation.download(image_info.id).annotation
         ann = sly.Annotation.from_json(ann_json, g.PROJECT_META)
 
+        if state["cleanLabels"] is True:
+            # create temporary annotation (set index as description for each label)
+            i = 0
+            label_id_to_area = {}
+            labels = []
+            for label in ann.labels:
+                label = label.clone(description=str(i))
+                label_id_to_area[i] = label.area
+                labels.append(label)
+                i += 1
+            new_ann = ann.clone(labels=labels)
+
         crop_names = []
         crop_images = []
         crop_anns = []
@@ -250,6 +290,18 @@ def split(api: sly.Api, task_id, context, state, app_logger):
                                                      sly.fs.get_file_ext(image_info.name))
 
             crop_ann = ann.relative_crop(window)
+            if state["cleanLabels"] is True:
+                # will use temporary annotation to match labels areas with same labels in full image
+                temp_crop = new_ann.relative_crop(window)
+
+                filtered_labels = []
+                for label, temp_label in zip(crop_ann.labels, temp_crop.labels): # labels are in the same order
+                    full_area = label_id_to_area[int(temp_label.description)]
+                    if full_area == 0:
+                        continue
+                    if label.area / full_area * 100 > state["cleanLabelsThreshold"]:
+                        filtered_labels.append(label)
+                crop_ann = crop_ann.clone(labels=filtered_labels)
 
             if state["borderStrategy"] == str(SlidingWindowBorderStrategy.ADD_PADDING):
                 crop_image = sly.image.crop_with_padding(img, window)
