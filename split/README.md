@@ -29,6 +29,12 @@ Industries and use cases:
 - split images for labelers 
 - split images for neural network inference
 
+**Changelog:**
+
+- ⚙️ v1.1.10 – Added new setting in sliding window configuration: sliding window size by percentage of image size, new option to make square sliding window.
+
+- 🧹 v1.1.20 – Added support for filtering labels by a percentage of cropped area (ignore labels with less than the specified percentage of area inside crop)
+
 ## Border strategy modes
 
 <table>
