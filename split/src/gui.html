@@ -233,7 +233,33 @@
         <el-checkbox class="mt5" v-model="state.drawLabels"
             >Draw labels</el-checkbox
         >
-        </sly-card>
+        <div class="mt15">
+            <b>
+                Labels cleaning threshold
+            </b>
+        </div>
+        <el-checkbox class="mt5" v-model="state.cleanLabels">
+            <sly-field
+                class="field-radio"
+                title="Enable cleaning"
+                description="Remove label if less than X% of label is inside the window"
+            >
+            </sly-field>
+        </el-checkbox>
+        <el-input-number
+            class="mt5 ml15"
+            v-if="state.cleanLabels"
+            v-model="state.cleanLabelsThreshold"
+            :min="1"
+            :max="99"
+        ></el-input-number>
+        <span
+            v-if="state.cleanLabels"
+            class="ml10"
+            style="color: gray"
+            >%</span
+        >
+    </sly-card>
         <sly-card title="Random Preview"
                   subtitle="Visualize sliding windows on random image as video"
                   style="width: 100%">

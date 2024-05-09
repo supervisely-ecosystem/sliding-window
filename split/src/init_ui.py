@@ -34,6 +34,8 @@ def init_settings(state):
     state["borderStrategy"] = "shift_window"  # "add_padding"
     state["fps"] = 4
     state["drawLabels"] = True
+    state["cleanLabels"] = False
+    state["cleanLabelsThreshold"] = 50
 
 
 def init_res_project(data, state, project_info):
