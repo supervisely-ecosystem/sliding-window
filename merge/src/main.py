@@ -51,6 +51,12 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
         max_width = defaultdict(int)
         for image_info, ann in zip(images, anns):
             # sly.logger.info(f'{image_info.name=}')
+            if image_info.name.count("___") != 1:
+                raise RuntimeError(
+                    "Incorrect images names. Should be: "
+                    "<image name>___<window index>_<window top coordinate>_<window left coordinate>.<image extension> "
+                    "Use Sliding window split app first to correctly split images."
+                )
             
             real_name = image_info.name.split("___")[0]
             # real_name = Regexps.extract_by_regexp(image_info.name, Regexps.filename_re)
@@ -64,7 +70,7 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
                     "Use Sliding window split app first to correctly split images."
                 )
 
-            window_index = int(settings.split("_")[0])
+            # window_index = int(settings.split("_")[0])
             window_top = int(settings.split("_")[1])
             window_left = int(settings.split("_")[2])
 

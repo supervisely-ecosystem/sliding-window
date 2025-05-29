@@ -283,11 +283,12 @@ def split(api: sly.Api, task_id, context, state, app_logger):
         crop_anns = []
 
         for window_index, window in enumerate(slider.get(img.shape[:2])):
-            crop_name = "{}___{:04d}_{}_{}{}".format(sly.fs.get_file_name(image_info.name),
-                                                     window_index,
-                                                     window.top,
-                                                     window.left,
-                                                     sly.fs.get_file_ext(image_info.name))
+            safe_base_name = sly.fs.get_file_name(image_info.name).replace("___", "__")
+            crop_name = "{}___{:04d}_{}_{}{}".format(safe_base_name,
+                                                    window_index,
+                                                    window.top,
+                                                    window.left,
+                                                    sly.fs.get_file_ext(image_info.name))
 
             crop_ann = ann.relative_crop(window)
             if state["cleanLabels"] is True:
