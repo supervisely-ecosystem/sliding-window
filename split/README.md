@@ -10,7 +10,7 @@
 </p>
 
 
-[![](https://img.shields.io/badge/supervisely-ecosystem-brightgreen)](https://ecosystem.supervisely.com/apps/supervisely-ecosystem/sliding-window/split)
+[![](https://img.shields.io/badge/supervisely-ecosystem-brightgreen)](../../../../supervisely-ecosystem/sliding-window/split)
 [![](https://img.shields.io/badge/slack-chat-green.svg?logo=slack)](https://supervisely.com/slack)
 ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/supervisely-ecosystem/sliding-window)
 [![views](https://app.supervisely.com/img/badges/views/supervisely-ecosystem/sliding-window/split.png)](https://supervisely.com)
@@ -20,7 +20,7 @@
 
 # Overview
 
-App splits all images and their labels using sliding window approach. Play with sliding window configuration and preview results before start splitting. All results will be saved to a new project. All crops can be mered back with another [Sliding window merge](https://ecosystem.supervisely.com/apps/supervisely-ecosystem%252Fsliding-window%252Fmerge) app. 
+App splits all images and their labels using sliding window approach. Play with sliding window configuration and preview results before start splitting. All results will be saved to a new project. All crops can be mered back with another [Sliding window merge](../../../../supervisely-ecosystem/supervisely-ecosystem%252Fsliding-window%252Fmerge) app. 
 
 Industries and use cases: 
 - microscopic images 
