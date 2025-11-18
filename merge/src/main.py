@@ -233,16 +233,55 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
                     # Translate to global coordinates
                     translated = label.translate(top, left)
 
+                    # Check if this window has a neighbor on the right or bottom
+                    has_right_neighbor = (
+                        right_idx < len(windows_info) and windows_info[right_idx]["top"] == top
+                    )
+                    has_bottom_neighbor = (
+                        bottom_idx < len(windows_info) and windows_info[bottom_idx]["left"] == left
+                    )
+
+                    # Check if there's actual cropping on right/bottom (overlap scenario)
+                    has_right_crop = crop_right < window_w
+                    has_bottom_crop = crop_bottom < window_h
+
+                    # During split, annotations lose 1 pixel on right/bottom edges
+                    # We extend by 1 pixel ONLY if there's a neighbor BUT NO overlap cropping
+                    geom = translated.geometry
+
+                    # Extend geometry bounds to compensate for split crop loss
+                    # BUT only if we're NOT already cropping due to overlap
+                    if (has_right_neighbor and not has_right_crop) or (
+                        has_bottom_neighbor and not has_bottom_crop
+                    ):
+                        bbox = geom.to_bbox()
+                        extend_right = 1 if (has_right_neighbor and not has_right_crop) else 0
+                        extend_bottom = 1 if (has_bottom_neighbor and not has_bottom_crop) else 0
+
+                        new_right = bbox.right + extend_right
+                        new_bottom = bbox.bottom + extend_bottom
+
+                        # Create extended bbox
+                        extended_bbox = sly.Rectangle(
+                            top=bbox.top, left=bbox.left, bottom=new_bottom, right=new_right
+                        )
+
+                        # For simple geometries, extend them
+                        if isinstance(geom, sly.Rectangle):
+                            geom = extended_bbox
+                        # For other geometries, we can't easily extend, so keep as is
+                        translated = translated.clone(geometry=geom)
+
                     # If no cropping needed, return as is
                     if (
                         crop_left == 0
                         and crop_top == 0
-                        and crop_right >= window_w
-                        and crop_bottom >= window_h
+                        and crop_right == window_w
+                        and crop_bottom == window_h
                     ):
                         return [translated]
 
-                    # Calculate crop rectangle in global coordinates
+                    # Calculate crop rectangle in global coordinates (inclusive bounds)
                     crop_rect = sly.Rectangle(
                         top=top + crop_top,
                         left=left + crop_left,
