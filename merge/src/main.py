@@ -54,15 +54,7 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
     # Extract strategy
     border_strategy = sliding_window_settings.get("borderStrategy", "none")
 
-    # Extract overlap values
-    overlap_x_str = sliding_window_settings.get("overlapX", "0px")
-    overlap_y_str = sliding_window_settings.get("overlapY", "0px")
-
-    # Parse overlap values (remove 'px' or '%' suffix)
-    overlap_x = int(overlap_x_str.replace("px", "").replace("%", ""))
-    overlap_y = int(overlap_y_str.replace("px", "").replace("%", ""))
-
-    sly.logger.info(f"Sliding window overlap: X={overlap_x}px, Y={overlap_y}px")
+    sly.logger.info(f"Sliding window settings: {sliding_window_settings}")
 
     progress = sly.Progress("Merging images", api.project.get_images_count(g.SRC_PROJECT.id))
     for src_dataset in api.dataset.get_list(g.SRC_PROJECT.id):

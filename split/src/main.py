@@ -213,7 +213,6 @@ def refresh_progress_split(api: sly.Api, task_id, progress: sly.Progress):
 @g.app.callback("split")
 @sly.timeit
 def split(api: sly.Api, task_id, context, state, app_logger):
-    sly.logger.debug(f"Window settings from UI: {state}")
     if len(g.IMAGES_INFO) == 0:
         message = f"Project {g.PROJECT_INFO.name} has no images"
         description = "Please, check your project and try again."
@@ -244,7 +243,7 @@ def split(api: sly.Api, task_id, context, state, app_logger):
     windowHeight = f'{state["windowHeightPx"]}px' if px else f'{state["windowHeightPercent"]}%'
     windowWidth = f'{state["windowWidthPx"]}px' if px else f'{state["windowWidthPercent"]}%'
     overlapY = f'{state["overlapYPx"]}px' if px else f'{state["overlapYPercent"]}%'
-    overlapX = f'{state["overlapYPx"]}px' if px else f'{state["overlapXPercent"]}%'
+    overlapX = f'{state["overlapXPx"]}px' if px else f'{state["overlapXPercent"]}%'
 
     custom_data = {
         "inputProject": {"id": g.PROJECT_INFO.id, "name": g.PROJECT_INFO.name},
@@ -255,6 +254,7 @@ def split(api: sly.Api, task_id, context, state, app_logger):
             "overlapX": overlapX,
             "borderStrategy": state["borderStrategy"],
         },
+        "taskId": task_id,
     }
     sly.logger.info(f"Starting split with settings: {state}")
     api.project.update_custom_data(
