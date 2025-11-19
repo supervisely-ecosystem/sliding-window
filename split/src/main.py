@@ -1,3 +1,4 @@
+from copy import copy, deepcopy
 import math
 import os
 import random
@@ -222,11 +223,11 @@ def split(api: sly.Api, task_id, context, state, app_logger):
         return
     image_info = random.choice(g.IMAGES_INFO)
     get_sliding_windows_sizes(image_info=image_info, state=state)
-    slider = SlidingWindowsFuzzy(
-        [state["windowHeight"], state["windowWidth"]],
-        [state["overlapY"], state["overlapX"]],
-        state["borderStrategy"],
-    )
+    # slider = SlidingWindowsFuzzy(
+    #     [state["windowHeight"], state["windowWidth"]],
+    #     [state["overlapY"], state["overlapX"]],
+    #     state["borderStrategy"],
+    # )
 
     dst_project = api.project.create(
         g.WORKSPACE_ID, state["resProjectName"], change_name_if_conflict=True
@@ -265,7 +266,7 @@ def split(api: sly.Api, task_id, context, state, app_logger):
 
     progress = sly.Progress("SW split", len(g.IMAGES_INFO))
 
-    state_backup = state
+    state_backup = deepcopy(state)
 
     for image_info in g.IMAGES_INFO:
         get_sliding_windows_sizes(image_info=image_info, state=state)
@@ -371,7 +372,7 @@ def split(api: sly.Api, task_id, context, state, app_logger):
         if progress.need_report():
             refresh_progress_split(api, task_id, progress)
 
-        state = state_backup
+        state = deepcopy(state_backup)
 
     res_project = api.project.get_info_by_id(dst_project.id)
     fields = [
