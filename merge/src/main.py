@@ -170,11 +170,9 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
                     other = windows_info[left_idx]
                     other_right = other["left"] + other["width"]
                     if other_right > left:
-                        # There is actual overlap
                         actual_overlap = other_right - left
-                        # This window takes the right half of overlap (rounded up for odd numbers)
-                        crop_left = (actual_overlap + 1) // 2
-                    # else: no overlap (gap between windows), don't crop
+                        # This window (right) crops from left, taking its half of overlap
+                        crop_left = actual_overlap - actual_overlap // 2
 
                 # Right neighbor (idx + 1, but only if same row)
                 right_idx = idx + 1
@@ -182,12 +180,11 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
                     other = windows_info[right_idx]
                     this_right = left + window_w
                     if this_right > other["left"]:
-                        # There is actual overlap
                         actual_overlap = this_right - other["left"]
-                        # This window takes the left half of overlap (rounded down for odd numbers)
-                        # Subtract 1 because Rectangle uses inclusive bounds
-                        crop_right = window_w - ((actual_overlap + 1) // 2) - 1
-                    # else: no overlap (gap between windows), don't crop
+                        # This window (left) keeps first part. Subtract 1 because Rectangle is inclusive.
+                        # We want: left_window covers [0, left+crop_right], right covers [other_left+crop_left, ...]
+                        # and left+crop_right+1 = other_left+crop_left to avoid gaps
+                        crop_right = window_w - actual_overlap // 2 - 1
 
                 # Top neighbor (idx - grid_width)
                 top_idx = idx - grid_width
@@ -197,11 +194,9 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
                     if other["left"] == left:
                         other_bottom = other["top"] + other["height"]
                         if other_bottom > top:
-                            # There is actual overlap
                             actual_overlap = other_bottom - top
-                            # This window takes the bottom half of overlap (rounded up for odd numbers)
-                            crop_top = (actual_overlap + 1) // 2
-                        # else: no overlap (gap between windows), don't crop
+                            # This window (bottom) crops from top, taking its half of overlap
+                            crop_top = actual_overlap - actual_overlap // 2
 
                 # Bottom neighbor (idx + grid_width)
                 bottom_idx = idx + grid_width
@@ -211,12 +206,9 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
                     if other["left"] == left:
                         this_bottom = top + window_h
                         if this_bottom > other["top"]:
-                            # There is actual overlap
                             actual_overlap = this_bottom - other["top"]
-                            # This window takes the top half of overlap (rounded down for odd numbers)
-                            # Subtract 1 because Rectangle uses inclusive bounds
-                            crop_bottom = window_h - ((actual_overlap + 1) // 2) - 1
-                        # else: no overlap (gap between windows), don't crop
+                            # This window (top) keeps first part. Subtract 1 because Rectangle is inclusive.
+                            crop_bottom = window_h - actual_overlap // 2 - 1
 
                 # Translate and crop labels
                 ann = window["ann"]
