@@ -8,8 +8,9 @@
     "data operations"
   ],
   "description": "Merge images and labels that were split by sliding window before",
-  "docker_image": "supervisely/data-operations:6.73.22",
-  "instance_version": "6.8.73",
+  "docker_image": "supervisely/data-operations:6.73.474",
+  "instance_version": "6.15.2",
+  "restart_policy": "never",
   "main_script": "merge/src/main.py",
   "headless": true,
   "modal_template": "merge/src/modal.html",
@@ -21,9 +22,7 @@
   "icon": "https://i.imgur.com/MRgVuje.png",
   "icon_background": "#FFFFFF",
   "context_menu": {
-    "target": [
-      "images_project"
-    ],
+    "target": ["images_project"],
     "context_category": "Transform"
   },
   "poster": "https://user-images.githubusercontent.com/106374579/182893998-99831e3d-7eda-42c8-8bc9-b08821659f0e.png"
