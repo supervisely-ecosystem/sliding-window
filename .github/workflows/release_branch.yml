@@ -7,7 +7,7 @@ on:
       - master
 jobs:
   Supervisely-Release:
-    uses: supervisely-ecosystem/workflows/.github/workflows/common.yml@self-hosted-runner
+    uses: supervisely-ecosystem/workflows/.github/workflows/common.yml@master
     secrets:
       SUPERVISELY_DEV_API_TOKEN: "${{ secrets.SUPERVISELY_DEV_API_TOKEN }}"
       SUPERVISELY_PRIVATE_DEV_API_TOKEN: "${{ secrets.SUPERVISELY_PRIVATE_DEV_API_TOKEN }}"
