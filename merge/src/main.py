@@ -4,6 +4,7 @@ import globals as g
 import numpy as np
 import supervisely as sly
 from supervisely.geometry.sliding_windows_fuzzy import SlidingWindowBorderStrategy
+from typing import List
 
 
 class Regexps:
@@ -56,7 +57,10 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
 
     sly.logger.info(f"Sliding window settings: {sliding_window_settings}")
 
-    progress = sly.Progress("Merging images", api.project.get_images_count(g.SRC_PROJECT.id))
+    images_progress = sly.Progress("Merged images", total_cnt=0)
+
+    parts_progress = sly.Progress("Merging parts", api.project.get_images_count(g.SRC_PROJECT.id))
+
     for src_dataset in api.dataset.get_list(g.SRC_PROJECT.id):
         dst_dataset = api.dataset.create(dst_project.id, src_dataset.name)
         images = api.image.get_list(src_dataset.id)
@@ -113,7 +117,7 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
             if original_dims_info is not None:
                 original_dims[original_name]["height"] = original_dims_info[0]
                 original_dims[original_name]["width"] = original_dims_info[1]
-
+        images_progress.total += len(parts_ids)
         for original_name in parts_ids.keys():
             images = api.image.download_nps(src_dataset.id, parts_ids[original_name])
             height = max_height[original_name]
@@ -156,78 +160,162 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
                 top, left = window["top"], window["left"]
                 window_h, window_w = window["height"], window["width"]
 
-                # Calculate the region of this window that should contain unique annotations
-                # Each window owns half of the overlap with its neighbors
+                # ----------- Helper to check if label should be cropped on a side ----------- #
+                def should_crop_on_side(label, side, neighbor_window, crop_boundary_local):
+                    """
+                    Check if label should be cropped on the given side.
+                    Returns True if cropping is allowed (neighbor has matching label on the same edge),
+                    False if cropping should be skipped (no matching label in neighbor on that edge).
 
-                crop_left = 0  # Start from beginning by default
-                crop_top = 0  # Start from beginning by default
-                crop_right = window_w  # Full width by default
-                crop_bottom = window_h  # Full height by default
+                    crop_boundary_local: the crop boundary position in local window coordinates
+                    """
+                    if neighbor_window is None:
+                        return False  # No neighbor, don't crop
+
+                    if crop_boundary_local is None or crop_boundary_local == 0:
+                        return False  # No cropping on this side
+
+                    # Label is in LOCAL coordinates of current window
+                    bbox = label.geometry.to_bbox()
+                    cls = label.obj_class.name
+
+                    # Check if label touches/crosses the crop boundary (in LOCAL coordinates)
+                    touches_crop_boundary = False
+                    if side == "left":
+                        touches_crop_boundary = bbox.left <= crop_boundary_local
+                    elif side == "right":
+                        touches_crop_boundary = bbox.right >= crop_boundary_local
+                    elif side == "top":
+                        touches_crop_boundary = bbox.top <= crop_boundary_local
+                    elif side == "bottom":
+                        touches_crop_boundary = bbox.bottom >= crop_boundary_local
+
+                    if not touches_crop_boundary:
+                        return (
+                            False  # Label doesn't touch the crop boundary on this side, don't crop
+                        )
+
+                    # Translate current label to global coordinates for comparison with neighbor
+                    label_global = label.translate(top, left)
+                    bbox_global = label_global.geometry.to_bbox()
+
+                    # Check if neighbor windows have matching label that overlaps on the perpendicular axis
+                    for n_label in neighbor_window["ann"].labels:
+                        if n_label.obj_class.name == cls:
+                            # Translate neighbor label to global coordinates
+                            n_label_global = n_label.translate(
+                                neighbor_window["top"], neighbor_window["left"]
+                            )
+                            n_bbox = n_label_global.geometry.to_bbox()
+
+                            # Check if labels overlap on perpendicular axis (in global coordinates)
+                            overlaps = False
+                            if side in ["left", "right"]:
+                                # For horizontal neighbors, check vertical overlap
+                                overlaps = (
+                                    n_bbox.top < bbox_global.bottom
+                                    and n_bbox.bottom > bbox_global.top
+                                )
+                            elif side in ["top", "bottom"]:
+                                # For vertical neighbors, check horizontal overlap
+                                overlaps = (
+                                    n_bbox.left < bbox_global.right
+                                    and n_bbox.right > bbox_global.left
+                                )
+
+                            if overlaps:
+                                # Found matching label in neighbor that aligns with this label
+                                return True  # CROP - the object continues in the neighbor
+
+                    # No matching label found in neighbor on the same edge - object ends here
+                    return False  # Don't crop - keep the whole label
+
+                # -------------- Calculate default crop borders based on overlap ------------- #
+                # These will be used for labels that SHOULD be cropped
+                default_crop_left = 0
+                default_crop_top = 0
+                default_crop_right = window_w
+                default_crop_bottom = window_h
 
                 # Left neighbor (idx - 1, but only if same row)
                 left_idx = idx - 1
+                left_neighbor = None
                 if left_idx >= 0 and windows_info[left_idx]["top"] == top:
                     other = windows_info[left_idx]
                     other_right = other["left"] + other["width"]
                     if other_right > left:
                         actual_overlap = other_right - left
-                        # This window (right) crops from left, taking its half of overlap
-                        crop_left = actual_overlap - actual_overlap // 2
+                        default_crop_left = actual_overlap - actual_overlap // 2
+                        left_neighbor = other
 
                 # Right neighbor (idx + 1, but only if same row)
                 right_idx = idx + 1
+                right_neighbor = None
                 if right_idx < len(windows_info) and windows_info[right_idx]["top"] == top:
                     other = windows_info[right_idx]
                     this_right = left + window_w
                     if this_right > other["left"]:
                         actual_overlap = this_right - other["left"]
-                        # This window (left) keeps first part. Subtract 1 because Rectangle is inclusive.
-                        # We want: left_window covers [0, left+crop_right], right covers [other_left+crop_left, ...]
-                        # and left+crop_right+1 = other_left+crop_left to avoid gaps
-                        crop_right = window_w - actual_overlap // 2 - 1
+                        default_crop_right = window_w - actual_overlap // 2 - 1
+                        right_neighbor = other
 
                 # Top neighbor (idx - grid_width)
                 top_idx = idx - grid_width
+                top_neighbor = None
                 if top_idx >= 0:
                     other = windows_info[top_idx]
-                    # Verify it's actually above (same column)
                     if other["left"] == left:
                         other_bottom = other["top"] + other["height"]
                         if other_bottom > top:
                             actual_overlap = other_bottom - top
-                            # This window (bottom) crops from top, taking its half of overlap
-                            crop_top = actual_overlap - actual_overlap // 2
+                            default_crop_top = actual_overlap - actual_overlap // 2
+                            top_neighbor = other
 
                 # Bottom neighbor (idx + grid_width)
                 bottom_idx = idx + grid_width
+                bottom_neighbor = None
                 if bottom_idx < len(windows_info):
                     other = windows_info[bottom_idx]
-                    # Verify it's actually below (same column)
                     if other["left"] == left:
                         this_bottom = top + window_h
                         if this_bottom > other["top"]:
                             actual_overlap = this_bottom - other["top"]
-                            # This window (top) keeps first part. Subtract 1 because Rectangle is inclusive.
-                            crop_bottom = window_h - actual_overlap // 2 - 1
+                            default_crop_bottom = window_h - actual_overlap // 2 - 1
+                            bottom_neighbor = other
 
                 # Translate and crop labels
-                ann = window["ann"]
+                ann: sly.Annotation = window["ann"]
 
-                def _translate_and_crop_label(label):
+                def _translate_and_crop_label(label: sly.Label) -> List[sly.Label]:
                     # Translate to global coordinates
                     translated = label.translate(top, left)
 
+                    # Determine custom crop boundaries for THIS specific label
+                    # Start with default overlap-based crop
+                    label_crop_left = default_crop_left
+                    label_crop_top = default_crop_top
+                    label_crop_right = default_crop_right
+                    label_crop_bottom = default_crop_bottom
+
+                    # Check each side: if label shouldn't be cropped, extend boundary
+                    if not should_crop_on_side(label, "left", left_neighbor, default_crop_left):
+                        label_crop_left = 0
+                    if not should_crop_on_side(label, "right", right_neighbor, default_crop_right):
+                        label_crop_right = window_w
+                    if not should_crop_on_side(label, "top", top_neighbor, default_crop_top):
+                        label_crop_top = 0
+                    if not should_crop_on_side(
+                        label, "bottom", bottom_neighbor, default_crop_bottom
+                    ):
+                        label_crop_bottom = window_h
+
                     # Check if this window has a neighbor on the right or bottom
-                    has_right_neighbor = (
-                        right_idx < len(windows_info) and windows_info[right_idx]["top"] == top
-                    )
-                    has_bottom_neighbor = (
-                        bottom_idx < len(windows_info) and windows_info[bottom_idx]["left"] == left
-                    )
+                    has_right_neighbor = right_neighbor is not None
+                    has_bottom_neighbor = bottom_neighbor is not None
 
                     # Check if there's actual cropping on right/bottom (overlap scenario)
-                    has_right_crop = crop_right < window_w
-                    has_bottom_crop = crop_bottom < window_h
+                    has_right_crop = label_crop_right < window_w
+                    has_bottom_crop = label_crop_bottom < window_h
 
                     # During split, annotations lose 1 pixel on right/bottom edges
                     # We extend by 1 pixel ONLY if there's a neighbor BUT NO overlap cropping
@@ -256,21 +344,21 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
                         # For other geometries, we can't easily extend, so keep as is
                         translated = translated.clone(geometry=geom)
 
-                    # If no cropping needed, return as is
+                    # If no cropping needed for this label, return as is
                     if (
-                        crop_left == 0
-                        and crop_top == 0
-                        and crop_right == window_w
-                        and crop_bottom == window_h
+                        label_crop_left == 0
+                        and label_crop_top == 0
+                        and label_crop_right == window_w
+                        and label_crop_bottom == window_h
                     ):
                         return [translated]
 
                     # Calculate crop rectangle in global coordinates (inclusive bounds)
                     crop_rect = sly.Rectangle(
-                        top=top + crop_top,
-                        left=left + crop_left,
-                        bottom=top + crop_bottom,
-                        right=left + crop_right,
+                        top=top + label_crop_top,
+                        left=left + label_crop_left,
+                        bottom=top + label_crop_bottom,
+                        right=left + label_crop_right,
                     )
 
                     # Crop the geometry
@@ -312,7 +400,7 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
 
                 # Add image part
                 final_image[top : top + window_h, left : left + window_w, :] = window["image"]
-
+                parts_progress.iters_done_report(1)
             # Adjust final image and annotation size if original dimensions are smaller (due to padding)
             if (
                 border_strategy == str(SlidingWindowBorderStrategy.ADD_PADDING)
@@ -326,7 +414,7 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
 
             merged_image_info = api.image.upload_np(dst_dataset.id, original_name, final_image)
             api.annotation.upload_ann(merged_image_info.id, final_ann)
-            progress.iters_done_report(len(images))
+            images_progress.iters_done_report(1)
 
     api.task.set_output_project(task_id, dst_project.id, dst_project.name)
     g.app.stop()
