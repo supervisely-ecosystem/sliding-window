@@ -5,6 +5,7 @@ import numpy as np
 import supervisely as sly
 from supervisely.geometry.sliding_windows_fuzzy import SlidingWindowBorderStrategy
 from typing import List
+from tqdm import tqdm
 
 
 class Regexps:
@@ -49,17 +50,17 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
     )
 
     # Get sliding window settings from source project metadata
-    src_custom_data = api.project.get_info_by_id(g.SRC_PROJECT.id).custom_data
-    sliding_window_settings = src_custom_data.get("slidingWindow", {})
+    src_project_info = api.project.get_info_by_id(g.SRC_PROJECT.id)
+    sliding_window_settings = src_project_info.custom_data.get("slidingWindow", {})
 
     # Extract strategy
     border_strategy = sliding_window_settings.get("borderStrategy", "none")
 
     sly.logger.info(f"Sliding window settings: {sliding_window_settings}")
 
-    images_progress = sly.Progress("Merged images", total_cnt=0)
+    images_progress = tqdm(desc="Merged images")
 
-    parts_progress = sly.Progress("Merging parts", api.project.get_images_count(g.SRC_PROJECT.id))
+    parts_progress = tqdm(total=src_project_info.images_count, desc="Merging parts")
 
     for src_dataset in api.dataset.get_list(g.SRC_PROJECT.id):
         dst_dataset = api.dataset.create(dst_project.id, src_dataset.name)
@@ -117,7 +118,7 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
             if original_dims_info is not None:
                 original_dims[original_name]["height"] = original_dims_info[0]
                 original_dims[original_name]["width"] = original_dims_info[1]
-        images_progress.total += len(parts_ids)
+
         for original_name in parts_ids.keys():
             images = api.image.download_nps(src_dataset.id, parts_ids[original_name])
             height = max_height[original_name]
@@ -400,7 +401,7 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
 
                 # Add image part
                 final_image[top : top + window_h, left : left + window_w, :] = window["image"]
-                parts_progress.iters_done_report(1)
+                parts_progress.update(1)
             # Adjust final image and annotation size if original dimensions are smaller (due to padding)
             if (
                 border_strategy == str(SlidingWindowBorderStrategy.ADD_PADDING)
@@ -414,7 +415,7 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
 
             merged_image_info = api.image.upload_np(dst_dataset.id, original_name, final_image)
             api.annotation.upload_ann(merged_image_info.id, final_ann)
-            images_progress.iters_done_report(1)
+            images_progress.update(1)
 
     api.task.set_output_project(task_id, dst_project.id, dst_project.name)
     g.app.stop()
