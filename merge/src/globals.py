@@ -11,16 +11,17 @@ sys.path.append(root_source_path)
 
 # only for debug
 # from dotenv import load_dotenv
+
 # load_dotenv(os.path.expanduser("~/supervisely.env"))
 # load_dotenv("merge/debug.env")
 
 app: AppService = AppService()
 
-TEAM_ID = int(os.environ['context.teamId'])
-WORKSPACE_ID = int(os.environ['context.workspaceId'])
-PROJECT_ID = int(os.environ['modal.state.slyProjectId'])
+TEAM_ID = int(os.environ["context.teamId"])
+WORKSPACE_ID = int(os.environ["context.workspaceId"])
+PROJECT_ID = int(os.environ["modal.state.slyProjectId"])
 
-DST_PROJECT_NAME = os.environ['modal.state.resultProjectName']
+DST_PROJECT_NAME = os.environ["modal.state.resultProjectName"]
 
 SRC_PROJECT = app.public_api.project.get_info_by_id(PROJECT_ID)
 if SRC_PROJECT is None:

@@ -1,3 +1,4 @@
+from copy import copy, deepcopy
 import math
 import os
 import random
@@ -8,7 +9,10 @@ import imgaug.augmenters as iaa
 import init_ui
 import supervisely as sly
 from supervisely.geometry.sliding_windows_fuzzy import (
-    SlidingWindowBorderStrategy, SlidingWindowsFuzzy)
+    SlidingWindowBorderStrategy,
+    SlidingWindowsFuzzy,
+)
+from tqdm import tqdm
 
 
 def cache_images_info(api: sly.Api, project_id):
@@ -16,11 +20,11 @@ def cache_images_info(api: sly.Api, project_id):
         g.IMAGES_INFO.extend(api.image.get_list(dataset_info.id))
 
 
-def refresh_progress_preview(api: sly.Api, task_id, progress: sly.Progress):
+def refresh_progress_preview(api: sly.Api, task_id, progress: tqdm):
     fields = [
-        {"field": "data.progressPreview", "payload": int(progress.current * 100 / progress.total)},
+        {"field": "data.progressPreview", "payload": int(progress.n * 100 / progress.total)},
         {"field": "data.progressPreviewMessage", "payload": progress.message},
-        {"field": "data.progressPreviewCurrent", "payload": progress.current},
+        {"field": "data.progressPreviewCurrent", "payload": progress.n},
         {"field": "data.progressPreviewTotal", "payload": progress.total},
     ]
     api.task.set_fields(task_id, fields)
@@ -58,6 +62,17 @@ def get_sliding_windows_sizes(image_info, state):
     state["overlapX"] = overlap_x
 
 
+def _handle_error_and_exit(api: sly.Api, task_id: int, msg: str):
+    sly.logger.warn(msg, exc_info=True)
+    fields = [
+        {"field": "data.videoUrl", "payload": None},
+        {"field": "state.previewLoading", "payload": False},
+    ]
+    api.task.set_fields(task_id, fields)
+    g.app.show_modal_window(msg, level="error", log_message=False)
+    return
+
+
 @g.app.callback("preview")
 @sly.timeit
 def preview(api: sly.Api, task_id, context, state, app_logger):
@@ -78,24 +93,17 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     get_sliding_windows_sizes(image_info=image_info, state=state)
     check_sliding_sizes_by_image(img_info=image_info, state=state)
 
-    def _log_error_and_stop(msg):
-        sly.logger.warn(msg, exc_info=True)
-        fields = [
-            {"field": "data.videoUrl", "payload": None},
-            {"field": "state.previewLoading", "payload": False},
-        ]
-        api.task.set_fields(task_id, fields)
-        g.app.show_modal_window(msg, level="error", log_message=False)
-        return
     try:
-        slider = SlidingWindowsFuzzy([state["windowHeight"], state["windowWidth"]],
-                                     [state["overlapY"], state["overlapX"]],
-                                     state["borderStrategy"])
+        slider = SlidingWindowsFuzzy(
+            [state["windowHeight"], state["windowWidth"]],
+            [state["overlapY"], state["overlapX"]],
+            state["borderStrategy"],
+        )
     except (ValueError, RuntimeError) as re:
-        _log_error_and_stop(f"Wrong sliding window settings: {re}")
+        _handle_error_and_exit(api=api, task_id=task_id, msg=f"Wrong sliding window settings: {re}")
         return
     except Exception as e:
-        _log_error_and_stop(f"Unexpected error: {repr(e)}")
+        _handle_error_and_exit(api=api, task_id=task_id, msg=f"Unexpected error: {repr(e)}")
         return
 
     img = api.image.download_np(image_info.id)
@@ -125,10 +133,12 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
         max_bottom = max(max_bottom, window.bottom)
 
     if max_right > w or max_bottom > h:
-        sly.logger.debug("Padding", extra={"h": h, "w": w, "max_right": max_right, "max_bottom": max_bottom})
-        aug = iaa.PadToFixedSize(width=max_right, height=max_bottom, position='right-bottom')
+        sly.logger.debug(
+            "Padding", extra={"h": h, "w": w, "max_right": max_right, "max_bottom": max_bottom}
+        )
+        aug = iaa.PadToFixedSize(width=max_right, height=max_bottom, position="right-bottom")
         img = aug(image=img)
-        #sly.image.write(os.path.join(app.data_dir, "padded.jpg"), img)
+        # sly.image.write(os.path.join(app.data_dir, "padded.jpg"), img)
 
     frame_img = img.copy()
     resize_aug = None
@@ -140,15 +150,17 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     video_path = os.path.join(g.app.data_dir, "preview.mp4")
     sly.fs.ensure_base_path(video_path)
     sly.fs.silent_remove(video_path)
-    video = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'VP90'), state["fps"], (width, height))
+    video = cv2.VideoWriter(
+        video_path, cv2.VideoWriter_fourcc(*"VP90"), state["fps"], (width, height)
+    )
     report_every = max(5, math.ceil(len(rectangles) / 100))
-    progress = sly.Progress("Rendering frames", len(rectangles))
+    progress = tqdm(desc="Rendering frames", total=len(rectangles))
     refresh_progress_preview(api, task_id, progress)
     for i, rect in enumerate(rectangles):
         frame = img.copy()
         if state["drawLabels"] is True:
             crop_ann = ann.relative_crop(rect)
-            temp_crop_img = frame[rect.top:rect.bottom + 1, rect.left:rect.right + 1].copy()
+            temp_crop_img = frame[rect.top : rect.bottom + 1, rect.left : rect.right + 1].copy()
             if state["cleanLabels"] is True:
                 filtered_labels = []
                 for label in crop_ann.labels:
@@ -159,26 +171,26 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
                         filtered_labels.append(label)
                 crop_ann = crop_ann.clone(labels=filtered_labels)
             crop_ann.draw_pretty(temp_crop_img, thickness=3)
-            frame[rect.top:rect.bottom + 1, rect.left:rect.right + 1] = temp_crop_img
+            frame[rect.top : rect.bottom + 1, rect.left : rect.right + 1] = temp_crop_img
         rect: sly.Rectangle
         rect.draw_contour(frame, [255, 0, 0], thickness=5)
         if resize_aug is not None:
             frame = resize_aug(image=frame)
-        #sly.image.write(os.path.join(app.data_dir, f"{i:05d}.jpg"), frame)
+        # sly.image.write(os.path.join(app.data_dir, f"{i:05d}.jpg"), frame)
         frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         video.write(frame_bgr)
 
-        progress.iter_done_report()
+        progress.update(1)
         if i % report_every == 0:
             refresh_progress_preview(api, task_id, progress)
 
-    progress = sly.Progress("Saving video file", 1)
-    progress.iter_done_report()
+    progress = tqdm(desc="Saving video file", total=1)
+    progress.update(1)
     refresh_progress_preview(api, task_id, progress)
     video.release()
 
-    progress = sly.Progress("Uploading video", 1)
-    progress.iter_done_report()
+    progress = tqdm(desc="Uploading video", total=1)
+    progress.update(1)
     refresh_progress_preview(api, task_id, progress)
     remote_video_path = os.path.join(f"/sliding-window/{task_id}", "preview.mp4")
     if api.file.exists(g.TEAM_ID, remote_video_path):
@@ -192,10 +204,10 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     api.task.set_fields(task_id, fields)
 
 
-def refresh_progress_split(api: sly.Api, task_id, progress: sly.Progress):
+def refresh_progress_split(api: sly.Api, task_id, progress: tqdm):
     fields = [
-        {"field": "data.progress", "payload": int(progress.current * 100 / progress.total)},
-        {"field": "data.progressCurrent", "payload": progress.current},
+        {"field": "data.progress", "payload": int(progress.n * 100 / progress.total)},
+        {"field": "data.progressCurrent", "payload": progress.n},
         {"field": "data.progressTotal", "payload": progress.total},
     ]
     api.task.set_fields(task_id, fields)
@@ -213,53 +225,75 @@ def split(api: sly.Api, task_id, context, state, app_logger):
         return
     image_info = random.choice(g.IMAGES_INFO)
     get_sliding_windows_sizes(image_info=image_info, state=state)
-    slider = SlidingWindowsFuzzy(
-        [state["windowHeight"], state["windowWidth"]],
-        [state["overlapY"], state["overlapX"]],
-        state["borderStrategy"],
-    )
+    # slider = SlidingWindowsFuzzy(
+    #     [state["windowHeight"], state["windowWidth"]],
+    #     [state["overlapY"], state["overlapX"]],
+    #     state["borderStrategy"],
+    # )
 
-    dst_project = api.project.create(g.WORKSPACE_ID, state["resProjectName"], change_name_if_conflict=True)
+    dst_project = api.project.create(
+        g.WORKSPACE_ID, state["resProjectName"], change_name_if_conflict=True
+    )
     if dst_project.name != state["resProjectName"]:
-        sly.logger.warn("Project with name={!r} already exists. Project is saved with autogenerated name {!r}"
-                        .format(state["resProjectName"], dst_project.name))
+        sly.logger.warn(
+            "Project with name={!r} already exists. Project is saved with autogenerated name {!r}".format(
+                state["resProjectName"], dst_project.name
+            )
+        )
     api.project.update_meta(dst_project.id, g.PROJECT_META.to_json())
 
     px = state["usePercents"] is False
     windowHeight = f'{state["windowHeightPx"]}px' if px else f'{state["windowHeightPercent"]}%'
     windowWidth = f'{state["windowWidthPx"]}px' if px else f'{state["windowWidthPercent"]}%'
     overlapY = f'{state["overlapYPx"]}px' if px else f'{state["overlapYPercent"]}%'
-    overlapX = f'{state["overlapYPx"]}px' if px else f'{state["overlapXPercent"]}%'
+    overlapX = f'{state["overlapXPx"]}px' if px else f'{state["overlapXPercent"]}%'
 
+    custom_data = {
+        "inputProject": {"id": g.PROJECT_INFO.id, "name": g.PROJECT_INFO.name},
+        "slidingWindow": {
+            "windowHeight": windowHeight,
+            "windowWidth": windowWidth,
+            "overlapY": overlapY,
+            "overlapX": overlapX,
+            "borderStrategy": state["borderStrategy"],
+        },
+        "taskId": task_id,
+    }
+    sly.logger.info(f"Starting split with settings: {state}")
     api.project.update_custom_data(
         dst_project.id,
-        {
-            "inputProject": {"id": g.PROJECT_INFO.id, "name": g.PROJECT_INFO.name},
-            "slidingWindow": {
-                "windowHeight": windowHeight,
-                "windowWidth": windowWidth,
-                "overlapY": overlapY,
-                "overlapX": overlapX,
-                "borderStrategy": state["borderStrategy"],
-            },
-        },
+        data=custom_data,
     )
     dst_datasets = {}
 
-    progress = sly.Progress("SW split", len(g.IMAGES_INFO))
+    progress = tqdm(desc="Splitting images", total=len(g.IMAGES_INFO))
 
-    state_backup = state
+    state_backup = deepcopy(state)
 
     for image_info in g.IMAGES_INFO:
         get_sliding_windows_sizes(image_info=image_info, state=state)
         check_sliding_sizes_by_image(img_info=image_info, state=state)
-        slider = SlidingWindowsFuzzy([state["windowHeight"], state["windowWidth"]],
-                                     [state["overlapY"], state["overlapX"]],
-                                     state["borderStrategy"])
+
+        try:
+            slider = SlidingWindowsFuzzy(
+                [state["windowHeight"], state["windowWidth"]],
+                [state["overlapY"], state["overlapX"]],
+                state["borderStrategy"],
+            )
+        except (ValueError, RuntimeError) as re:
+            _handle_error_and_exit(
+                api=api, task_id=task_id, msg=f"Wrong sliding window settings: {re}"
+            )
+            return
+        except Exception as e:
+            _handle_error_and_exit(api=api, task_id=task_id, msg=f"Unexpected error: {repr(e)}")
+            return
 
         if image_info.dataset_id not in dst_datasets:
             dataset_info = api.dataset.get_info_by_id(image_info.dataset_id)
-            dst_datasets[image_info.dataset_id] = api.dataset.create(dst_project.id, dataset_info.name, dataset_info.description)
+            dst_datasets[image_info.dataset_id] = api.dataset.create(
+                dst_project.id, dataset_info.name, dataset_info.description
+            )
         dst_dataset = dst_datasets[image_info.dataset_id]
 
         img = api.image.download_np(image_info.id)
@@ -284,11 +318,24 @@ def split(api: sly.Api, task_id, context, state, app_logger):
 
         for window_index, window in enumerate(slider.get(img.shape[:2])):
             safe_base_name = sly.fs.get_file_name(image_info.name).replace("___", "__")
-            crop_name = "{}___{:04d}_{}_{}{}".format(safe_base_name,
-                                                    window_index,
-                                                    window.top,
-                                                    window.left,
-                                                    sly.fs.get_file_ext(image_info.name))
+            if window_index == 0:
+                crop_name = "{}___{:04d}_{}_{}_dims_{}x{}{}".format(
+                    safe_base_name,
+                    window_index,
+                    window.top,
+                    window.left,
+                    img.shape[0],
+                    img.shape[1],
+                    sly.fs.get_file_ext(image_info.name),
+                )
+            else:
+                crop_name = "{}___{:04d}_{}_{}{}".format(
+                    safe_base_name,
+                    window_index,
+                    window.top,
+                    window.left,
+                    sly.fs.get_file_ext(image_info.name),
+                )
 
             crop_ann = ann.relative_crop(window)
             if state["cleanLabels"] is True:
@@ -296,7 +343,9 @@ def split(api: sly.Api, task_id, context, state, app_logger):
                 temp_crop = new_ann.relative_crop(window)
 
                 filtered_labels = []
-                for label, temp_label in zip(crop_ann.labels, temp_crop.labels): # labels are in the same order
+                for label, temp_label in zip(
+                    crop_ann.labels, temp_crop.labels
+                ):  # labels are in the same order
                     full_area = label_id_to_area[int(temp_label.description)]
                     if full_area == 0:
                         continue
@@ -331,19 +380,20 @@ def split(api: sly.Api, task_id, context, state, app_logger):
         dst_image_ids = [dst_img_info.id for dst_img_info in dst_image_infos]
         api.annotation.upload_anns(dst_image_ids, crop_anns)
 
-        progress.iter_done_report()
-        if progress.need_report():
-            refresh_progress_split(api, task_id, progress)
+        progress.update(1)
+        refresh_progress_split(api, task_id, progress)
 
-        state = state_backup
+        state = deepcopy(state_backup)
 
     res_project = api.project.get_info_by_id(dst_project.id)
     fields = [
         {"field": "data.started", "payload": False},
         {"field": "data.resProjectId", "payload": res_project.id},
         {"field": "data.resProjectName", "payload": res_project.name},
-        {"field": "data.resProjectPreviewUrl",
-         "payload": api.image.preview_url(res_project.reference_image_url, 100, 100)},
+        {
+            "field": "data.resProjectPreviewUrl",
+            "payload": api.image.preview_url(res_project.reference_image_url, 100, 100),
+        },
     ]
     api.task.set_fields(task_id, fields)
     api.task.set_output_project(task_id, res_project.id, res_project.name)
