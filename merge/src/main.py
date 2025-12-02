@@ -401,7 +401,7 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
 
                 # Add image part
                 final_image[top : top + window_h, left : left + window_w, :] = window["image"]
-                parts_progress.update()
+                parts_progress.update(1)
             # Adjust final image and annotation size if original dimensions are smaller (due to padding)
             if (
                 border_strategy == str(SlidingWindowBorderStrategy.ADD_PADDING)
@@ -415,7 +415,7 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
 
             merged_image_info = api.image.upload_np(dst_dataset.id, original_name, final_image)
             api.annotation.upload_ann(merged_image_info.id, final_ann)
-            images_progress.update()
+            images_progress.update(1)
 
     api.task.set_output_project(task_id, dst_project.id, dst_project.name)
     g.app.stop()

@@ -180,17 +180,17 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
         frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         video.write(frame_bgr)
 
-        progress.update()
+        progress.update(1)
         if i % report_every == 0:
             refresh_progress_preview(api, task_id, progress)
 
     progress = tqdm(desc="Saving video file", total=1)
-    progress.update()
+    progress.update(1)
     refresh_progress_preview(api, task_id, progress)
     video.release()
 
     progress = tqdm(desc="Uploading video", total=1)
-    progress.update()
+    progress.update(1)
     refresh_progress_preview(api, task_id, progress)
     remote_video_path = os.path.join(f"/sliding-window/{task_id}", "preview.mp4")
     if api.file.exists(g.TEAM_ID, remote_video_path):
