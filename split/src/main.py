@@ -12,6 +12,7 @@ from supervisely.geometry.sliding_windows_fuzzy import (
     SlidingWindowBorderStrategy,
     SlidingWindowsFuzzy,
 )
+from tqdm import tqdm
 
 
 def cache_images_info(api: sly.Api, project_id):
@@ -19,11 +20,11 @@ def cache_images_info(api: sly.Api, project_id):
         g.IMAGES_INFO.extend(api.image.get_list(dataset_info.id))
 
 
-def refresh_progress_preview(api: sly.Api, task_id, progress: sly.Progress):
+def refresh_progress_preview(api: sly.Api, task_id, progress: tqdm):
     fields = [
-        {"field": "data.progressPreview", "payload": int(progress.current * 100 / progress.total)},
-        {"field": "data.progressPreviewMessage", "payload": progress.message},
-        {"field": "data.progressPreviewCurrent", "payload": progress.current},
+        {"field": "data.progressPreview", "payload": int(progress.n * 100 / progress.total)},
+        {"field": "data.progressPreviewMessage", "payload": progress.desc},
+        {"field": "data.progressPreviewCurrent", "payload": progress.n},
         {"field": "data.progressPreviewTotal", "payload": progress.total},
     ]
     api.task.set_fields(task_id, fields)
@@ -153,7 +154,7 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
         video_path, cv2.VideoWriter_fourcc(*"VP90"), state["fps"], (width, height)
     )
     report_every = max(5, math.ceil(len(rectangles) / 100))
-    progress = sly.Progress("Rendering frames", len(rectangles))
+    progress = tqdm(desc="Rendering frames", total=len(rectangles))
     refresh_progress_preview(api, task_id, progress)
     for i, rect in enumerate(rectangles):
         frame = img.copy()
@@ -179,17 +180,17 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
         frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         video.write(frame_bgr)
 
-        progress.iter_done_report()
+        progress.update()
         if i % report_every == 0:
             refresh_progress_preview(api, task_id, progress)
 
-    progress = sly.Progress("Saving video file", 1)
-    progress.iter_done_report()
+    progress = tqdm(desc="Saving video file", total=1)
+    progress.update()
     refresh_progress_preview(api, task_id, progress)
     video.release()
 
-    progress = sly.Progress("Uploading video", 1)
-    progress.iter_done_report()
+    progress = tqdm(desc="Uploading video", total=1)
+    progress.update()
     refresh_progress_preview(api, task_id, progress)
     remote_video_path = os.path.join(f"/sliding-window/{task_id}", "preview.mp4")
     if api.file.exists(g.TEAM_ID, remote_video_path):
@@ -203,10 +204,10 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     api.task.set_fields(task_id, fields)
 
 
-def refresh_progress_split(api: sly.Api, task_id, progress: sly.Progress):
+def refresh_progress_split(api: sly.Api, task_id, progress: tqdm):
     fields = [
-        {"field": "data.progress", "payload": int(progress.current * 100 / progress.total)},
-        {"field": "data.progressCurrent", "payload": progress.current},
+        {"field": "data.progress", "payload": int(progress.n * 100 / progress.total)},
+        {"field": "data.progressCurrent", "payload": progress.n},
         {"field": "data.progressTotal", "payload": progress.total},
     ]
     api.task.set_fields(task_id, fields)
@@ -265,7 +266,7 @@ def split(api: sly.Api, task_id, context, state, app_logger):
     )
     dst_datasets = {}
 
-    progress = sly.Progress("SW split", len(g.IMAGES_INFO))
+    progress = tqdm(desc="Splitting images", total=len(g.IMAGES_INFO))
 
     state_backup = deepcopy(state)
 
@@ -379,9 +380,8 @@ def split(api: sly.Api, task_id, context, state, app_logger):
         dst_image_ids = [dst_img_info.id for dst_img_info in dst_image_infos]
         api.annotation.upload_anns(dst_image_ids, crop_anns)
 
-        progress.iter_done_report()
-        if progress.need_report():
-            refresh_progress_split(api, task_id, progress)
+        progress.update(1)
+        refresh_progress_split(api, task_id, progress)
 
         state = deepcopy(state_backup)
 
