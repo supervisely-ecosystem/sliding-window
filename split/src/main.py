@@ -23,7 +23,7 @@ def cache_images_info(api: sly.Api, project_id):
 def refresh_progress_preview(api: sly.Api, task_id, progress: tqdm):
     fields = [
         {"field": "data.progressPreview", "payload": int(progress.n * 100 / progress.total)},
-        {"field": "data.progressPreviewMessage", "payload": progress.desc},
+        {"field": "data.progressPreviewMessage", "payload": progress.message},
         {"field": "data.progressPreviewCurrent", "payload": progress.n},
         {"field": "data.progressPreviewTotal", "payload": progress.total},
     ]
