@@ -15,8 +15,16 @@ from supervisely.geometry.sliding_windows_fuzzy import (
 from tqdm import tqdm
 
 
+def get_project_datasets(api: sly.Api, project_id):
+    try:
+        return api.dataset.get_list(project_id, recursive=True)
+    except TypeError:
+        return api.dataset.get_list(project_id)
+
+
 def cache_images_info(api: sly.Api, project_id):
-    for dataset_info in api.dataset.get_list(project_id):
+    datasets = get_project_datasets(api, project_id)
+    for dataset_info in datasets:
         g.IMAGES_INFO.extend(api.image.get_list(dataset_info.id))
 
 
