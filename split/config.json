@@ -8,8 +8,8 @@
     "data operations"
   ],
   "description": "Configure, preview and split images and annotations with sliding window",
-  "docker_image": "supervisely/data-operations:6.73.474",
-  "min_instance_version": "6.15.2",
+  "docker_image": "supervisely/data-operations:6.73.534",
+  "min_instance_version": "6.15.40",
   "restart_policy": "never",
   "main_script": "split/src/main.py",
   "gui_template": "split/src/gui.html",
