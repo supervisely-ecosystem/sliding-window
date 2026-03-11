@@ -12,6 +12,7 @@ jobs:
     uses: supervisely-ecosystem/workflows/.github/workflows/build_image_from_template.yml@master
     with:
       image_name: "${{ github.event.repository.name }}"
+      config_file: "split/config.json"
       cve_checks: true
   Supervisely-Release:
     if: "!github.event.release.prerelease"
