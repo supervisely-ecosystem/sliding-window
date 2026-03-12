@@ -13,4 +13,6 @@ jobs:
     with:
       image_name: "${{ github.event.repository.name }}"
       tag_version: "${{ github.event.inputs.tag_version }}"
+      config_file: "split/config.json"
       cve_checks: true
+      skip_tag_check: true
