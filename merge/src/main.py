@@ -13,6 +13,7 @@ if not hasattr(np, "sctypes"):
         "datetime": [np.datetime64],
         "timedelta": [np.timedelta64],
     }
+import imgaug
 import supervisely as sly
 from supervisely.geometry.sliding_windows_fuzzy import SlidingWindowBorderStrategy
 from typing import List
