@@ -1,3 +1,4 @@
+import asyncio
 from copy import copy, deepcopy
 import math
 import os
@@ -429,6 +430,7 @@ def main():
     data["progressPreviewTotal"] = 0
 
     cache_images_info(g.app.public_api, g.PROJECT_ID)
+    asyncio.set_event_loop(asyncio.new_event_loop())
     g.app.run(data=data, state=state)
 
 

@@ -1,3 +1,4 @@
+import asyncio
 from collections import defaultdict
 
 import globals as g
@@ -422,6 +423,7 @@ def merge(api: sly.Api, task_id, context, state, app_logger):
 
 
 def main():
+    asyncio.set_event_loop(asyncio.new_event_loop())
     g.app.run(initial_events=[{"command": "merge"}])
 
 
