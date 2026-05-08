@@ -12,6 +12,7 @@ jobs:
     uses: supervisely-ecosystem/workflows/.github/workflows/build_image_from_template.yml@master
     with:
       image_name: "${{ github.event.repository.name }}"
+      dockerfile_template_path: "docker/Dockerfile.tmpl"
       config_file: "split/config.json"
       cve_checks: true
   Supervisely-Release:
