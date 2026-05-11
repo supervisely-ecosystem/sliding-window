@@ -8,8 +8,7 @@
     "data operations"
   ],
   "description": "Configure, preview and split images and annotations with sliding window",
-  "docker_image": "supervisely/sliding-window:6.73.545",
-  "min_instance_version": "6.15.40",
+  "docker_image": "supervisely/sliding-window:6.73.564",
   "restart_policy": "never",
   "main_script": "split/src/main.py",
   "gui_template": "split/src/gui.html",
@@ -18,8 +17,11 @@
   "icon": "https://i.imgur.com/nMhn7qf.png",
   "icon_background": "#FFFFFF",
   "context_menu": {
-    "target": ["images_project"],
+    "target": [
+      "images_project"
+    ],
     "context_category": "Transform"
   },
-  "poster": "https://user-images.githubusercontent.com/106374579/182894311-e475a643-170a-4e21-8d68-285b68bfa67d.png"
+  "poster": "https://user-images.githubusercontent.com/106374579/182894311-e475a643-170a-4e21-8d68-285b68bfa67d.png",
+  "instance_version": "6.15.60"
 }

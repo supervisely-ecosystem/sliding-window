@@ -6,7 +6,6 @@ import random
 
 import cv2
 import globals as g
-import imgaug.augmenters as iaa
 import init_ui
 import supervisely as sly
 from supervisely.geometry.sliding_windows_fuzzy import (
@@ -14,6 +13,31 @@ from supervisely.geometry.sliding_windows_fuzzy import (
     SlidingWindowsFuzzy,
 )
 from tqdm import tqdm
+
+
+def pad_to_fixed_size(image, width: int, height: int):
+    image_height, image_width = image.shape[:2]
+    right_pad = max(width - image_width, 0)
+    bottom_pad = max(height - image_height, 0)
+    if right_pad == 0 and bottom_pad == 0:
+        return image
+    return cv2.copyMakeBorder(
+        image,
+        top=0,
+        bottom=bottom_pad,
+        left=0,
+        right=right_pad,
+        borderType=cv2.BORDER_CONSTANT,
+        value=(0, 0, 0),
+    )
+
+
+def resize_keep_aspect_by_height(image, height: int):
+    image_height, image_width = image.shape[:2]
+    if image_height == height:
+        return image
+    width = max(1, round(image_width * height / image_height))
+    return cv2.resize(image, (width, height), interpolation=cv2.INTER_LINEAR)
 
 
 def get_project_datasets(api: sly.Api, project_id):
@@ -145,15 +169,14 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
         sly.logger.debug(
             "Padding", extra={"h": h, "w": w, "max_right": max_right, "max_bottom": max_bottom}
         )
-        aug = iaa.PadToFixedSize(width=max_right, height=max_bottom, position="right-bottom")
-        img = aug(image=img)
+        img = pad_to_fixed_size(img, width=max_right, height=max_bottom)
         # sly.image.write(os.path.join(app.data_dir, "padded.jpg"), img)
 
     frame_img = img.copy()
-    resize_aug = None
+    resize_height = None
     if frame_img.shape[0] > g.MAX_VIDEO_HEIGHT:
-        resize_aug = iaa.Resize({"height": g.MAX_VIDEO_HEIGHT, "width": "keep-aspect-ratio"})
-        frame_img = resize_aug(image=frame_img.copy())
+        resize_height = g.MAX_VIDEO_HEIGHT
+        frame_img = resize_keep_aspect_by_height(frame_img.copy(), resize_height)
     height, width, channels = frame_img.shape
 
     video_path = os.path.join(g.app.data_dir, "preview.mp4")
@@ -183,8 +206,8 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
             frame[rect.top : rect.bottom + 1, rect.left : rect.right + 1] = temp_crop_img
         rect: sly.Rectangle
         rect.draw_contour(frame, [255, 0, 0], thickness=5)
-        if resize_aug is not None:
-            frame = resize_aug(image=frame)
+        if resize_height is not None:
+            frame = resize_keep_aspect_by_height(frame, resize_height)
         # sly.image.write(os.path.join(app.data_dir, f"{i:05d}.jpg"), frame)
         frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         video.write(frame_bgr)
@@ -367,10 +390,9 @@ def split(api: sly.Api, task_id, context, state, app_logger):
             else:
                 crop_image = sly.image.crop(img, window)
             if state["resizeWindow"] is True:
-                resize_aug = iaa.Resize(
-                    {"height": state["resizeValue"], "width": "keep-aspect-ratio"}
+                resized_image = resize_keep_aspect_by_height(
+                    crop_image.copy(), state["resizeValue"]
                 )
-                resized_image = resize_aug(image=crop_image.copy())
                 try:
                     resized_ann = crop_ann.resize(resized_image.shape[:2])
                     crop_anns.append(resized_ann)
