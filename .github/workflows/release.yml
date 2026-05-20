@@ -13,6 +13,7 @@ jobs:
     with:
       image_name: "${{ github.event.repository.name }}"
       cve_checks: true
+      config_file: "merge/config.json"
   Supervisely-Release:
     if: "!github.event.release.prerelease"
     needs: build-image
