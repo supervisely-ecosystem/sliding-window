@@ -31,3 +31,4 @@ jobs:
       cve_checks: ${{ inputs.enable_cve_checks }}
       skip_tag_check: ${{ inputs.skip_tag_check }}
       no_cache_requirements: ${{ inputs.no_cache_requirements }}
+      config_file: "merge/config.json"
